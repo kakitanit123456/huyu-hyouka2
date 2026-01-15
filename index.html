@@ -280,6 +280,173 @@
     stub("btnAutoGroup", "Part2で自動(2・2・3)割り当てを実装します");
     stub("btnClearPhoto", "Part2で画像削除を実装します");
   });
+  // ===============================
+// Part2: 名簿 + グループ（2・2・3）
+// ===============================
+
+// dataの最低形を保証（Part1のdefaultDataに無ければ追加される）
+function ensureDataShape(){
+  state.data.students = Array.isArray(state.data.students) ? state.data.students : ["（児童1）"];
+  state.data.studentGroup = (state.data.studentGroup && typeof state.data.studentGroup === "object") ? state.data.studentGroup : {};
+  state.data.photosByStudent = (state.data.photosByStudent && typeof state.data.photosByStudent === "object") ? state.data.photosByStudent : {};
+  state.data.progressByStudent = (state.data.progressByStudent && typeof state.data.progressByStudent === "object") ? state.data.progressByStudent : {};
+
+  // 学籍ごとにキーを用意
+  state.data.students.forEach(n=>{
+    if(state.data.studentGroup[n] == null) state.data.studentGroup[n] = "";
+    if(state.data.progressByStudent[n] == null) state.data.progressByStudent[n] = { plan:"", status:"", note:"" };
+  });
+
+  // currentStudentの保険
+  if(!state.currentStudent || !state.data.students.includes(state.currentStudent)){
+    state.currentStudent = state.data.students[0];
+  }
+}
+
+function renderStudentSelect(){
+  const sel = document.getElementById("studentSelect");
+  if(!sel) return;
+
+  sel.innerHTML = "";
+  state.data.students.forEach(name=>{
+    const o = document.createElement("option");
+    o.value = name;
+    o.textContent = name;
+    sel.appendChild(o);
+  });
+
+  sel.value = state.currentStudent;
+
+  sel.onchange = ()=>{
+    state.currentStudent = sel.value;
+    saveData();
+    renderGroupUI();
+    // Part3で renderSyncTestUI() を呼ぶ（存在すれば）
+    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
+    if(typeof renderPhotoPreview === "function") renderPhotoPreview();
+  };
+}
+
+function bindAddStudent(){
+  const btn = document.getElementById("btnAddStudent");
+  const inp = document.getElementById("newStudentName");
+  if(!btn || !inp) return;
+
+  btn.onclick = ()=>{
+    const name = (inp.value || "").trim();
+    if(!name) return alert("児童名を入力してください。");
+    if(state.data.students.includes(name)) return alert("同名の児童がすでにいます。");
+
+    state.data.students.push(name);
+    state.data.studentGroup[name] = "";
+    state.data.progressByStudent[name] = { plan:"", status:"", note:"" };
+    // 写真は個人管理だけど、キーは必要に応じて後で作ればOK（ここでは触らない）
+
+    state.currentStudent = name;
+    inp.value = "";
+    saveData();
+
+    renderStudentSelect();
+    renderGroupUI();
+    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
+    if(typeof renderPhotoPreview === "function") renderPhotoPreview();
+  };
+
+  inp.onkeydown = (e)=>{
+    if(e.key === "Enter") btn.click();
+  };
+}
+
+function bindDeleteStudent(){
+  const btn = document.getElementById("btnDelStudent");
+  if(!btn) return; // HTMLに無ければ何もしない
+
+  btn.onclick = ()=>{
+    const name = state.currentStudent;
+    if(!name) return;
+
+    if(!confirm(`「${name}」を名簿から削除しますか？\n（この児童の画像・進捗データも端末内から削除されます）`)) return;
+
+    // 削除
+    state.data.students = state.data.students.filter(n => n !== name);
+    delete state.data.studentGroup[name];
+    delete state.data.progressByStudent[name];
+    delete state.data.photosByStudent[name];
+
+    if(state.data.students.length === 0){
+      state.data.students = ["（児童1）"];
+    }
+    state.currentStudent = state.data.students[0];
+
+    saveData();
+    renderStudentSelect();
+    renderGroupUI();
+    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
+    if(typeof renderPhotoPreview === "function") renderPhotoPreview();
+  };
+}
+
+function renderGroupUI(){
+  const sel = document.getElementById("groupSelect");
+  const cnt = document.getElementById("groupCount");
+  if(!sel || !cnt) return;
+
+  const g = state.data.studentGroup?.[state.currentStudent] || "";
+  sel.value = g;
+
+  const counts = {G1:0,G2:0,G3:0,"":0};
+  state.data.students.forEach(n=>{
+    const gg = state.data.studentGroup?.[n] || "";
+    counts[gg] = (counts[gg] ?? 0) + 1;
+  });
+
+  cnt.textContent = `人数：G1=${counts.G1} / G2=${counts.G2} / G3=${counts.G3}（未=${counts[""]}）`;
+
+  sel.onchange = ()=>{
+    state.data.studentGroup = state.data.studentGroup || {};
+    state.data.studentGroup[state.currentStudent] = sel.value;
+    saveData();
+    renderGroupUI();
+    // Part3で renderSyncTestUI() を呼ぶ（存在すれば）
+    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
+  };
+}
+
+function autoAssignGroups223(){
+  // 児童順に 2・2・3 で割り当て（7人想定／増えても最後はG3に流す）
+  const list = state.data.students.slice();
+  const plan = ["G1","G1","G2","G2","G3","G3","G3"];
+
+  state.data.studentGroup = state.data.studentGroup || {};
+  list.forEach((n,i)=>{
+    state.data.studentGroup[n] = plan[i] || "G3";
+  });
+
+  saveData();
+  renderGroupUI();
+  if(typeof renderSyncTestUI === "function") renderSyncTestUI();
+}
+
+function bindAutoGroup(){
+  const btn = document.getElementById("btnAutoGroup");
+  if(!btn) return;
+
+  btn.onclick = ()=>{
+    if(!confirm("児童順に 2・2・3（G1,G2,G3）で自動割り当てしますか？")) return;
+    autoAssignGroups223();
+  };
+}
+
+// ---- Part2 init hook ----
+function initPart2(){
+  ensureDataShape();
+  renderStudentSelect();
+  renderGroupUI();
+  bindAddStudent();
+  bindDeleteStudent();
+  bindAutoGroup();
+  saveData();
+}
 </script>
 </body>
 </html>
