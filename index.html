@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>4年理科 評価記録ツール（冬プロ）</title>
+
+  <style>
+    :root{
+      --bg:#0b0c10; --card:#12141a; --card2:#161a22; --text:#e8eef7; --muted:#a9b3c2;
+      --line:#232a36; --chip:#1c2330; --btn:#1f2a3a; --accent:#59a8ff;
+      --danger:#ff6b6b;
+    }
+    :root[data-theme="light"]{
+      --bg:#f6f7fb; --card:#ffffff; --card2:#f1f3f8; --text:#0c1220; --muted:#4b5565;
+      --line:#d9e0ea; --chip:#eef2f8; --btn:#ffffff;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    }
+
+    header{
+      position:sticky; top:0; z-index:1000;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    :root[data-theme="light"] header{
+      background:rgba(255,255,255,.92);
+    }
+
+    .wrap{max-width:1250px;margin:0 auto;padding:14px 14px 22px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;gap:12px}
+    @media (min-width: 920px){ .grid{grid-template-columns: 360px 1fr} }
+
+    .grow{flex:1; min-width:0}
+    h1{font-size:16px;margin:0 0 6px 0;letter-spacing:.02em}
+    .sub{font-size:12px;color:var(--muted)}
+    .hint{font-size:12px;color:var(--muted)}
+    .small{font-size:12px;color:var(--muted)}
+    .hr{height:1px;background:var(--line);margin:10px 0}
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .card.soft{background:var(--card2)}
+    .sec-title{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:8px}
+    .sec-title h2{font-size:14px;margin:0}
+
+    .btn{
+      background:var(--btn);
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+      cursor:pointer;
+      pointer-events:auto;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover{border-color: color-mix(in srgb, var(--line) 40%, #ffffff 30%)}
+    .btn.primary{border-color: color-mix(in srgb, var(--accent) 60%, var(--line));}
+    .btn.danger{border-color: color-mix(in srgb, var(--danger) 65%, var(--line)); color: color-mix(in srgb, var(--danger) 70%, var(--text));}
+
+    input,select,textarea{
+      background:var(--card2);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:10px;
+      padding:10px;
+      font-size:13px;
+      width:100%;
+      min-width:0;
+    }
+    textarea{min-height:84px; resize:vertical}
+
+    /* iPad横で header が “かぶさってボタンが押せない” 対策 */
+    .headerBar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:2000;
+    }
+    .headerLeft{flex:1 1 auto; min-width:0}
+    .headerLeft h1{overflow-wrap:anywhere}
+    .headerActions{flex:0 0 auto; display:flex; gap:10px; flex-wrap:wrap; z-index:3000}
+    #btnTheme{position:relative; z-index:4000; pointer-events:auto}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border:1px solid var(--line); border-radius:999px;
+      background:var(--chip); color:var(--muted); font-size:12px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:2px 8px; border-radius:999px; border:1px solid var(--line);
+      background:var(--chip); color:var(--muted); font-size:12px;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="headerBar">
+      <div class="headerLeft">
+        <h1>4年理科 評価記録ツール（冬の自然探究プロジェクト）</h1>
+        <div class="sub">localStorageのみ（オフライン）／同期：plan＋statusのみ（グループ内）</div>
+      </div>
+
+      <div class="headerActions">
+        <button class="btn" id="btnTheme" type="button">🌙</button>
+        <button class="btn" id="btnExport" type="button">エクスポート</button>
+        <button class="btn" id="btnImport" type="button">インポート</button>
+        <button class="btn danger" id="btnReset" type="button">全データ削除</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap grid">
+  <!-- 左：名簿 -->
+  <div class="card">
+    <div class="sec-title">
+      <h2>名簿</h2>
+      <span class="hint">児童の追加／削除（Part2で実装）</span>
+    </div>
+
+    <div class="row">
+      <select id="studentSelect" class="grow">
+        <option value="(sample)">（サンプル）児童A</option>
+      </select>
+      <button class="btn" id="btnDeleteStudent" type="button">削除</button>
+    </div>
+
+    <div class="row">
+      <input id="newStudentName" class="grow" placeholder="追加する児童名（例：山田 太郎）" />
+      <button class="btn primary" id="btnAddStudent" type="button">追加</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="sec-title">
+      <h2>グループ設定（2・2・3）</h2>
+      <span class="hint">G1/G2/G3＋未設定</span>
+    </div>
+
+    <div class="row">
+      <select id="groupSelect" class="grow">
+        <option value="">（未設定）</option>
+        <option value="G1">G1（2人）</option>
+        <option value="G2">G2（2人）</option>
+        <option value="G3">G3（3人）</option>
+      </select>
+      <button class="btn" id="btnAutoGroup" type="button">自動(2・2・3)</button>
+    </div>
+
+    <div class="small" id="groupCount" style="margin-top:6px">
+      人数：G1=0 / G2=0 / G3=0（未=0）
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="sec-title">
+      <h2>同期設定</h2>
+      <span class="hint">同期するのは plan＋status のみ</span>
+    </div>
+
+    <label class="pill" style="width:100%; justify-content:space-between">
+      <span>同期を有効にする</span>
+      <input id="syncToggle" type="checkbox" style="width:auto" />
+    </label>
+
+    <div class="small" id="syncInfo" style="margin-top:8px">
+      例：対象グループ：G1（同期先 2人）／未設定なら同期なし
+    </div>
+  </div>
+
+  <!-- 右：入力エリア -->
+  <div class="card soft">
+    <div class="sec-title">
+      <h2>記録</h2>
+      <span class="hint">提出物・画像は個人（同期しない）</span>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:14px;font-weight:700">計画（plan）／進捗（status）</div>
+        <span class="badge">同期対象</span>
+      </div>
+
+      <div class="sub" style="margin-top:10px">計画（plan）</div>
+      <input id="planInput" placeholder="例：観察カード、写真、発表準備 など" />
+
+      <div class="sub" style="margin-top:10px">進捗（status）</div>
+      <select id="statusSelect">
+        <option value="">（未設定）</option>
+        <option value="未">未</option>
+        <option value="途中">途中</option>
+        <option value="完了">完了</option>
+      </select>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:14px;font-weight:700">提出物・画像（個人）</div>
+        <span class="badge">同期しない</span>
+      </div>
+
+      <div class="sub" style="margin-top:10px">提出物メモ（個人）</div>
+      <textarea id="noteInput" placeholder="例：提出済み、再提出、写真OK など（個人メモ）"></textarea>
+
+      <div class="sub" style="margin-top:10px">画像（個人・1枚）</div>
+      <div class="row">
+        <input id="photoInput" type="file" accept="image/*" />
+        <button class="btn" id="btnClearPhoto" type="button">画像を削除</button>
+      </div>
+
+      <img id="photoPreview" alt="" style="width:100%;max-height:320px;object-fit:contain;border:1px solid var(--line);border-radius:12px;display:none;margin-top:8px" />
+      <div class="small" style="margin-top:8px">※ Part2で保存（localStorage）を実装します</div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">この段階の確認</div>
+      <ul style="margin:0; padding-left:18px; color:var(--muted); line-height:1.7; font-size:13px">
+        <li>右上の🌙/☀️でライト/ダークが切り替わる</li>
+        <li>iPad横でも右上ボタンが押せる（headerがかぶらない）</li>
+        <li>コンソールにエラーが出ない</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Part1: テーマ切替だけ（データはまだ触らない）
+  const THEME_KEY = "rika4_theme_v3";
+
+  function applyTheme(mode){
+    document.documentElement.dataset.theme = mode;
+    localStorage.setItem(THEME_KEY, mode);
+
+    const btn = document.getElementById("btnTheme");
+    if(btn){
+      btn.textContent = (mode === "light") ? "☀️" : "🌙";
+      btn.title = (mode === "light") ? "ダークに切り替え" : "ライトに切り替え";
+    }
+  }
+
+  function toggleTheme(){
+    const cur = document.documentElement.dataset.theme || "dark";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  }
+
+  document.addEventListener("DOMContentLoaded", ()=>{
+    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+
+    const tbtn = document.getElementById("btnTheme");
+    if(tbtn) tbtn.addEventListener("click", toggleTheme);
+
+    // Part1では未実装ボタンの誤操作防止（押したら案内だけ出す）
+    const stub = (id, msg)=>{
+      const el = document.getElementById(id);
+      if(el) el.addEventListener("click", ()=> alert(msg));
+    };
+    stub("btnExport", "Part2でエクスポートを実装します");
+    stub("btnImport", "Part2でインポートを実装します");
+    stub("btnReset",  "Part2で全データ削除を実装します");
+    stub("btnAddStudent", "Part2で名簿追加を実装します");
+    stub("btnDeleteStudent", "Part2で名簿削除を実装します");
+    stub("btnAutoGroup", "Part2で自動(2・2・3)割り当てを実装します");
+    stub("btnClearPhoto", "Part2で画像削除を実装します");
+  });
+</script>
+</body>
+</html>
