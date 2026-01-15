@@ -242,211 +242,408 @@
 </div>
 
 <script>
-  // Part1: テーマ切替だけ（データはまだ触らない）
-  const THEME_KEY = "rika4_theme_v3";
+  // =========================
+  // Part2 (2/3): 名簿/グループ/保存/同期(plan+status)
+  // 画像保存・Export/Import は Part3 に回す
+  // =========================
 
+  // ===== Storage keys =====
+  const THEME_KEY = "rika4_theme_v3";
+  const DATA_KEY  = "rika4_data_v1";
+  const SYNC_KEY  = "rika4_sync_enabled_v1";
+
+  // ===== DOM helpers =====
+  const $ = (id)=> document.getElementById(id);
+
+  // ===== Theme =====
   function applyTheme(mode){
     document.documentElement.dataset.theme = mode;
     localStorage.setItem(THEME_KEY, mode);
 
-    const btn = document.getElementById("btnTheme");
+    const btn = $("btnTheme");
     if(btn){
       btn.textContent = (mode === "light") ? "☀️" : "🌙";
       btn.title = (mode === "light") ? "ダークに切り替え" : "ライトに切り替え";
     }
   }
-
   function toggleTheme(){
     const cur = document.documentElement.dataset.theme || "dark";
     applyTheme(cur === "dark" ? "light" : "dark");
   }
 
-  document.addEventListener("DOMContentLoaded", ()=>{
-    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+  // ===== Data model =====
+  const defaultData = {
+    students: ["児童A","児童B","児童C","児童D","児童E","児童F","児童G"],
+    studentGroup: {},     // { name: "G1"|"G2"|"G3"|"" }
+    progressByStudent: {} // { name: { plan:"", status:"", note:"" } }
+    // photosByStudent は Part3 で追加
+  };
 
-    const tbtn = document.getElementById("btnTheme");
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function ensureStudentRow(d, name){
+    d.studentGroup = d.studentGroup || {};
+    d.progressByStudent = d.progressByStudent || {};
+
+    if(d.studentGroup[name] == null) d.studentGroup[name] = "";
+    if(d.progressByStudent[name] == null){
+      d.progressByStudent[name] = { plan:"", status:"", note:"" };
+    }else{
+      // 旧データ救済
+      if(d.progressByStudent[name].plan == null) d.progressByStudent[name].plan = "";
+      if(d.progressByStudent[name].status == null) d.progressByStudent[name].status = d.progressByStudent[name].done || "";
+      if(d.progressByStudent[name].note == null) d.progressByStudent[name].note = "";
+    }
+  }
+
+  function loadData(){
+    try{
+      const raw = localStorage.getItem(DATA_KEY);
+      if(!raw){
+        const d = clone(defaultData);
+        d.students.forEach(n=> ensureStudentRow(d, n));
+        return d;
+      }
+      const d = JSON.parse(raw);
+
+      if(!Array.isArray(d.students)) d.students = clone(defaultData.students);
+      if(!d.studentGroup || typeof d.studentGroup !== "object") d.studentGroup = {};
+      if(!d.progressByStudent || typeof d.progressByStudent !== "object") d.progressByStudent = {};
+
+      if(d.students.length === 0) d.students = clone(defaultData.students);
+
+      d.students.forEach(n=> ensureStudentRow(d, n));
+      return d;
+    }catch(e){
+      console.warn(e);
+      const d = clone(defaultData);
+      d.students.forEach(n=> ensureStudentRow(d, n));
+      return d;
+    }
+  }
+
+  function saveData(){
+    localStorage.setItem(DATA_KEY, JSON.stringify(state.data));
+  }
+
+  const state = {
+    data: loadData(),
+    currentStudent: null
+  };
+
+  // ===== Group helpers =====
+  function getGroupMembers(studentName){
+    const g = state.data.studentGroup?.[studentName] || "";
+    if(!g) return [studentName];
+    return state.data.students.filter(n => (state.data.studentGroup?.[n] || "") === g);
+  }
+
+  // ===== Sync: plan + status only =====
+  function syncProgressToGroup(fromStudent){
+    const members = getGroupMembers(fromStudent);
+
+    // 保険
+    ensureStudentRow(state.data, fromStudent);
+
+    const src = state.data.progressByStudent[fromStudent];
+
+    members.forEach(m=>{
+      ensureStudentRow(state.data, m);
+      const prev = state.data.progressByStudent[m] || {};
+      state.data.progressByStudent[m] = {
+        plan: src.plan || "",
+        status: src.status || "",
+        note: prev.note || "" // note は同期しない
+      };
+    });
+
+    saveData();
+  }
+
+  function isSyncEnabled(){
+    return localStorage.getItem(SYNC_KEY) === "1";
+  }
+
+  // ===== UI render: student select =====
+  function renderStudentSelect(){
+    const sel = $("studentSelect");
+    if(!sel) return;
+
+    sel.innerHTML = "";
+    state.data.students.forEach(name=>{
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    });
+
+    if(!state.currentStudent) state.currentStudent = state.data.students[0];
+    sel.value = state.currentStudent;
+
+    sel.onchange = ()=>{
+      state.currentStudent = sel.value;
+      ensureStudentRow(state.data, state.currentStudent);
+      saveData();
+      renderAllForCurrent();
+    };
+  }
+
+  // ===== UI render: group =====
+  function renderGroupUI(){
+    const sel = $("groupSelect");
+    const cnt = $("groupCount");
+    if(!sel || !cnt) return;
+
+    const cur = state.currentStudent;
+    ensureStudentRow(state.data, cur);
+
+    sel.value = state.data.studentGroup?.[cur] || "";
+
+    // counts
+    const counts = {G1:0, G2:0, G3:0, "":0};
+    state.data.students.forEach(n=>{
+      const g = state.data.studentGroup?.[n] || "";
+      counts[g] = (counts[g] ?? 0) + 1;
+    });
+    cnt.textContent = `人数：G1=${counts.G1} / G2=${counts.G2} / G3=${counts.G3}（未=${counts[""]}）`;
+
+    sel.onchange = ()=>{
+      state.data.studentGroup[cur] = sel.value || "";
+      saveData();
+      renderGroupUI();
+      renderSyncInfo();
+    };
+  }
+
+  function autoAssignGroups223(){
+    const list = state.data.students.slice();
+    const plan = ["G1","G1","G2","G2","G3","G3","G3"];
+
+    state.data.studentGroup = state.data.studentGroup || {};
+    list.forEach((name, i)=>{
+      state.data.studentGroup[name] = plan[i] || "G3";
+    });
+    saveData();
+    renderGroupUI();
+    renderSyncInfo();
+  }
+
+  // ===== UI render: plan/status/note =====
+  function renderProgressUI(){
+    const planEl   = $("planInput");
+    const statusEl = $("statusSelect");
+    const noteEl   = $("noteInput");
+    if(!planEl || !statusEl || !noteEl) return;
+
+    const cur = state.currentStudent;
+    ensureStudentRow(state.data, cur);
+
+    planEl.value   = state.data.progressByStudent[cur].plan || "";
+    statusEl.value = state.data.progressByStudent[cur].status || "";
+    noteEl.value   = state.data.progressByStudent[cur].note || "";
+  }
+
+  // ===== UI: sync toggle + info =====
+  function bindSyncToggle(){
+    const t = $("syncToggle");
+    if(!t) return;
+
+    t.checked = isSyncEnabled();
+
+    t.onchange = ()=>{
+      localStorage.setItem(SYNC_KEY, t.checked ? "1" : "0");
+      renderSyncInfo();
+    };
+  }
+
+  function renderSyncInfo(){
+    const info = $("syncInfo");
+    const t    = $("syncToggle");
+    if(!info || !t) return;
+
+    const cur = state.currentStudent;
+    const g = state.data.studentGroup?.[cur] || "";
+    const members = getGroupMembers(cur);
+
+    if(!g){
+      info.textContent = "グループ未設定：この児童だけ（同期なし）";
+      return;
+    }
+
+    info.textContent = t.checked
+      ? `同期ON：対象グループ ${g}（同期先 ${members.length}人）`
+      : `同期OFF：対象グループ ${g}（同期はしない）`;
+  }
+
+  // ===== UI: bind add/delete student =====
+  function bindAddStudent(){
+    const btn = $("btnAddStudent");
+    const inp = $("newStudentName");
+    if(!btn || !inp) return;
+
+    const add = ()=>{
+      const name = (inp.value || "").trim();
+      if(!name) return alert("児童名を入力してください。");
+      if(state.data.students.includes(name)) return alert("同名の児童がすでにいます。");
+
+      state.data.students.push(name);
+      ensureStudentRow(state.data, name);
+      state.currentStudent = name;
+      inp.value = "";
+      saveData();
+
+      renderStudentSelect();
+      renderAllForCurrent();
+    };
+
+    btn.onclick = add;
+    inp.onkeydown = (e)=>{ if(e.key === "Enter") add(); };
+  }
+
+  function bindDeleteStudent(){
+    const btn = $("btnDeleteStudent");
+    if(!btn) return;
+
+    btn.onclick = ()=>{
+      const cur = state.currentStudent;
+      if(!cur) return;
+
+      if(!confirm(`「${cur}」を名簿から削除しますか？\n（この児童の記録も端末内から消えます）`)) return;
+
+      state.data.students = state.data.students.filter(n => n !== cur);
+      // 関連データも削除
+      if(state.data.studentGroup) delete state.data.studentGroup[cur];
+      if(state.data.progressByStudent) delete state.data.progressByStudent[cur];
+      // photosByStudent は Part3 で扱う
+
+      if(state.data.students.length === 0){
+        state.data.students = clone(defaultData.students);
+        state.data.students.forEach(n=> ensureStudentRow(state.data, n));
+      }
+
+      state.currentStudent = state.data.students[0];
+      saveData();
+
+      renderStudentSelect();
+      renderAllForCurrent();
+    };
+  }
+
+  // ===== UI: bind group auto =====
+  function bindAutoGroup(){
+    const btn = $("btnAutoGroup");
+    if(!btn) return;
+
+    btn.onclick = ()=>{
+      if(!confirm("児童順に 2・2・3（G1,G2,G3）で自動割り当てしますか？")) return;
+      autoAssignGroups223();
+    };
+  }
+
+  // ===== UI: bind plan/status/note =====
+  function bindProgressInputs(){
+    const planEl   = $("planInput");
+    const statusEl = $("statusSelect");
+    const noteEl   = $("noteInput");
+    if(!planEl || !statusEl || !noteEl) return;
+
+    const saveAndMaybeSync = ()=>{
+      saveData();
+      if(isSyncEnabled()){
+        syncProgressToGroup(state.currentStudent);
+        // 同期後に表示を現在値に揃える
+        renderProgressUI();
+      }
+      renderSyncInfo();
+    };
+
+    planEl.oninput = ()=>{
+      const cur = state.currentStudent;
+      ensureStudentRow(state.data, cur);
+      state.data.progressByStudent[cur].plan = planEl.value;
+      saveAndMaybeSync();
+    };
+
+    statusEl.onchange = ()=>{
+      const cur = state.currentStudent;
+      ensureStudentRow(state.data, cur);
+      state.data.progressByStudent[cur].status = statusEl.value;
+      saveAndMaybeSync();
+    };
+
+    noteEl.oninput = ()=>{
+      const cur = state.currentStudent;
+      ensureStudentRow(state.data, cur);
+      state.data.progressByStudent[cur].note = noteEl.value;
+      // note は同期しない
+      saveData();
+    };
+  }
+
+  // ===== Buttons: reset / export / import / photo (Part3) =====
+  function bindHeaderButtons(){
+    const reset = $("btnReset");
+    if(reset){
+      reset.onclick = ()=>{
+        if(!confirm("全データを削除しますか？（端末内 localStorage のみ）")) return;
+        localStorage.removeItem(DATA_KEY);
+        // sync / theme は残してもいいが、混乱防止で一緒に消す
+        localStorage.removeItem(SYNC_KEY);
+        // THEME_KEY は好みなので残してもOK（今回は残す）
+        location.reload();
+      };
+    }
+
+    const stub = (id, msg)=>{
+      const el = $(id);
+      if(el) el.onclick = ()=> alert(msg);
+    };
+    stub("btnExport", "エクスポートは Part3 で実装します");
+    stub("btnImport", "インポートは Part3 で実装します");
+    stub("btnClearPhoto", "画像の保存/削除は Part3 で実装します");
+    const photoInput = $("photoInput");
+    if(photoInput){
+      photoInput.onchange = ()=>{
+        alert("画像の保存は Part3 で実装します（今は保存されません）");
+        photoInput.value = "";
+      };
+    }
+  }
+
+  // ===== Render all for current student =====
+  function renderAllForCurrent(){
+    renderGroupUI();
+    renderSyncInfo();
+    renderProgressUI();
+    // 画像プレビューは Part3 で
+  }
+
+  // ===== init =====
+  document.addEventListener("DOMContentLoaded", ()=>{
+    // theme init
+    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+    const tbtn = $("btnTheme");
     if(tbtn) tbtn.addEventListener("click", toggleTheme);
 
-    // Part1では未実装ボタンの誤操作防止（押したら案内だけ出す）
-    const stub = (id, msg)=>{
-      const el = document.getElementById(id);
-      if(el) el.addEventListener("click", ()=> alert(msg));
-    };
-    stub("btnExport", "Part2でエクスポートを実装します");
-    stub("btnImport", "Part2でインポートを実装します");
-    stub("btnReset",  "Part2で全データ削除を実装します");
-    stub("btnAddStudent", "Part2で名簿追加を実装します");
-    stub("btnDeleteStudent", "Part2で名簿削除を実装します");
-    stub("btnAutoGroup", "Part2で自動(2・2・3)割り当てを実装します");
-    stub("btnClearPhoto", "Part2で画像削除を実装します");
-  });
-  // ===============================
-// Part2: 名簿 + グループ（2・2・3）
-// ===============================
-
-// dataの最低形を保証（Part1のdefaultDataに無ければ追加される）
-function ensureDataShape(){
-  state.data.students = Array.isArray(state.data.students) ? state.data.students : ["（児童1）"];
-  state.data.studentGroup = (state.data.studentGroup && typeof state.data.studentGroup === "object") ? state.data.studentGroup : {};
-  state.data.photosByStudent = (state.data.photosByStudent && typeof state.data.photosByStudent === "object") ? state.data.photosByStudent : {};
-  state.data.progressByStudent = (state.data.progressByStudent && typeof state.data.progressByStudent === "object") ? state.data.progressByStudent : {};
-
-  // 学籍ごとにキーを用意
-  state.data.students.forEach(n=>{
-    if(state.data.studentGroup[n] == null) state.data.studentGroup[n] = "";
-    if(state.data.progressByStudent[n] == null) state.data.progressByStudent[n] = { plan:"", status:"", note:"" };
-  });
-
-  // currentStudentの保険
-  if(!state.currentStudent || !state.data.students.includes(state.currentStudent)){
+    // init state
     state.currentStudent = state.data.students[0];
-  }
-}
-
-function renderStudentSelect(){
-  const sel = document.getElementById("studentSelect");
-  if(!sel) return;
-
-  sel.innerHTML = "";
-  state.data.students.forEach(name=>{
-    const o = document.createElement("option");
-    o.value = name;
-    o.textContent = name;
-    sel.appendChild(o);
-  });
-
-  sel.value = state.currentStudent;
-
-  sel.onchange = ()=>{
-    state.currentStudent = sel.value;
-    saveData();
-    renderGroupUI();
-    // Part3で renderSyncTestUI() を呼ぶ（存在すれば）
-    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
-    if(typeof renderPhotoPreview === "function") renderPhotoPreview();
-  };
-}
-
-function bindAddStudent(){
-  const btn = document.getElementById("btnAddStudent");
-  const inp = document.getElementById("newStudentName");
-  if(!btn || !inp) return;
-
-  btn.onclick = ()=>{
-    const name = (inp.value || "").trim();
-    if(!name) return alert("児童名を入力してください。");
-    if(state.data.students.includes(name)) return alert("同名の児童がすでにいます。");
-
-    state.data.students.push(name);
-    state.data.studentGroup[name] = "";
-    state.data.progressByStudent[name] = { plan:"", status:"", note:"" };
-    // 写真は個人管理だけど、キーは必要に応じて後で作ればOK（ここでは触らない）
-
-    state.currentStudent = name;
-    inp.value = "";
+    ensureStudentRow(state.data, state.currentStudent);
     saveData();
 
+    // render
     renderStudentSelect();
-    renderGroupUI();
-    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
-    if(typeof renderPhotoPreview === "function") renderPhotoPreview();
-  };
+    renderAllForCurrent();
 
-  inp.onkeydown = (e)=>{
-    if(e.key === "Enter") btn.click();
-  };
-}
-
-function bindDeleteStudent(){
-  const btn = document.getElementById("btnDelStudent");
-  if(!btn) return; // HTMLに無ければ何もしない
-
-  btn.onclick = ()=>{
-    const name = state.currentStudent;
-    if(!name) return;
-
-    if(!confirm(`「${name}」を名簿から削除しますか？\n（この児童の画像・進捗データも端末内から削除されます）`)) return;
-
-    // 削除
-    state.data.students = state.data.students.filter(n => n !== name);
-    delete state.data.studentGroup[name];
-    delete state.data.progressByStudent[name];
-    delete state.data.photosByStudent[name];
-
-    if(state.data.students.length === 0){
-      state.data.students = ["（児童1）"];
-    }
-    state.currentStudent = state.data.students[0];
-
-    saveData();
-    renderStudentSelect();
-    renderGroupUI();
-    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
-    if(typeof renderPhotoPreview === "function") renderPhotoPreview();
-  };
-}
-
-function renderGroupUI(){
-  const sel = document.getElementById("groupSelect");
-  const cnt = document.getElementById("groupCount");
-  if(!sel || !cnt) return;
-
-  const g = state.data.studentGroup?.[state.currentStudent] || "";
-  sel.value = g;
-
-  const counts = {G1:0,G2:0,G3:0,"":0};
-  state.data.students.forEach(n=>{
-    const gg = state.data.studentGroup?.[n] || "";
-    counts[gg] = (counts[gg] ?? 0) + 1;
+    // bind
+    bindSyncToggle();
+    bindAddStudent();
+    bindDeleteStudent();
+    bindAutoGroup();
+    bindProgressInputs();
+    bindHeaderButtons();
   });
-
-  cnt.textContent = `人数：G1=${counts.G1} / G2=${counts.G2} / G3=${counts.G3}（未=${counts[""]}）`;
-
-  sel.onchange = ()=>{
-    state.data.studentGroup = state.data.studentGroup || {};
-    state.data.studentGroup[state.currentStudent] = sel.value;
-    saveData();
-    renderGroupUI();
-    // Part3で renderSyncTestUI() を呼ぶ（存在すれば）
-    if(typeof renderSyncTestUI === "function") renderSyncTestUI();
-  };
-}
-
-function autoAssignGroups223(){
-  // 児童順に 2・2・3 で割り当て（7人想定／増えても最後はG3に流す）
-  const list = state.data.students.slice();
-  const plan = ["G1","G1","G2","G2","G3","G3","G3"];
-
-  state.data.studentGroup = state.data.studentGroup || {};
-  list.forEach((n,i)=>{
-    state.data.studentGroup[n] = plan[i] || "G3";
-  });
-
-  saveData();
-  renderGroupUI();
-  if(typeof renderSyncTestUI === "function") renderSyncTestUI();
-}
-
-function bindAutoGroup(){
-  const btn = document.getElementById("btnAutoGroup");
-  if(!btn) return;
-
-  btn.onclick = ()=>{
-    if(!confirm("児童順に 2・2・3（G1,G2,G3）で自動割り当てしますか？")) return;
-    autoAssignGroups223();
-  };
-}
-
-// ---- Part2 init hook ----
-function initPart2(){
-  ensureDataShape();
-  renderStudentSelect();
-  renderGroupUI();
-  bindAddStudent();
-  bindDeleteStudent();
-  bindAutoGroup();
-  saveData();
-}
 </script>
 </body>
 </html>
