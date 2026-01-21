@@ -332,7 +332,10 @@ function toggleTheme(){
 
 // ===== Data model =====
 const defaultData = {
-  students: [...],
+  students: [
+  "（サンプル）児童A","（サンプル）児童B","（サンプル）児童C",
+  "（サンプル）児童D","（サンプル）児童E","（サンプル）児童F","（サンプル）児童G"
+],
   studentGroup: {},
   progressByStudent: {},
   noteByStudent: {},
@@ -363,11 +366,6 @@ function loadData(){
     if(!d.noteByStudent || typeof d.noteByStudent !== "object") d.noteByStudent = {};
     if(!d.photosByStudent || typeof d.photosByStudent !== "object") d.photosByStudent = {};
     if(!d.stepsByStudent || typeof d.stepsByStudent !== "object") d.stepsByStudent = {};
-    if(!state.data.stepLabelsGlobal || !Array.isArray(state.data.stepLabelsGlobal) || state.data.stepLabelsGlobal.length !== 12){
-  state.data.stepLabelsGlobal = safeClone(defaultData.stepLabelsGlobal);
-}
-if(!state.data.stepLabelsByStudent || typeof state.data.stepLabelsByStudent !== "object"){
-  state.data.stepLabelsByStudent = {};
 }
 /* [ADD] stepラベル保存領域の補完（loadData内） */
  // ★ 追加：stepラベルの保存領域を補完
@@ -803,29 +801,20 @@ function renderSteps(){
 
   wrap.innerHTML = "";
 
-  const btn = document.createElement("button");
-btn.type = "button";
-btn.className = "btn stepBtn";          // ★ CSSを効かせる
-btn.dataset.stepIndex = String(i);
+  for(let i=0;i<12;i++){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn stepBtn";
+    btn.dataset.stepIndex = String(i);
 
-btn.innerHTML = `
-   <div style="font-weight:700">${i+1}</div>
-   <div style="font-size:11px;color:var(--muted);line-height:1.2; margin-top:2px; overflow-wrap:anywhere">
-     ${labels[i] || ""}
-   </div>
-`;
+    btn.innerHTML = `
+      <div style="font-weight:700">${i+1}</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.2; margin-top:2px; overflow-wrap:anywhere">
+        ${labels[i] || ""}
+      </div>
+    `;
 
- if(arr[i]) btn.classList.add("isDone"); // ★ 完了の見た目
- wrap.appendChild(btn);
-
-    // ON/OFF 色
-    if(arr[i]){
-      btn.style.borderColor = "var(--accent)";
-      btn.style.background = "color-mix(in srgb, var(--accent) 18%, var(--btn))";
-    }else{
-      btn.style.borderColor = "var(--line)";
-      btn.style.background = "var(--btn)";
-    }
+    if(arr[i]) btn.classList.add("isDone");
 
     wrap.appendChild(btn);
   }
