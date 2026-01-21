@@ -427,7 +427,6 @@ function renderStudentSelect(){
   sel.onchange = ()=>{
     state.currentStudent = sel.value;
     renderGroupUI();
-    renderSyncInfo();
     renderInputs();
     renderSteps();
     saveData();
@@ -458,7 +457,6 @@ function renderGroupUI(){
     state.data.studentGroup[state.currentStudent] = sel.value;
     saveData();
     renderGroupUI();
-    renderSyncInfo();
   };
 }
 
@@ -471,7 +469,6 @@ function autoAssignGroups223(){
   });
   saveData();
   renderGroupUI();
-  renderSyncInfo();
 }
 
 /**********************
@@ -751,7 +748,6 @@ function bindRosterButtons(){
 
       renderStudentSelect();
       renderGroupUI();
-      renderSyncInfo();
       renderInputs();
       renderSteps();
     };
@@ -782,7 +778,6 @@ function bindRosterButtons(){
 
       renderStudentSelect();
       renderGroupUI();
-      renderSyncInfo();
       renderInputs();
       renderSteps();
     };
@@ -980,8 +975,6 @@ function resetAll(){
   saveData();
   renderStudentSelect();
   renderGroupUI();
-  renderSyncToggle();
-  renderSyncInfo();
   renderInputs();
   renderSteps();
 
@@ -1000,8 +993,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   renderStudentSelect();
   renderGroupUI();
-  renderSyncToggle();
-  renderSyncInfo();
   renderInputs();
   renderSteps();
 
