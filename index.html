@@ -513,48 +513,48 @@ if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[
   }
 
   function bindInputs(){
-    const planEl = document.getElementById("planInput");
-    const statusEl = document.getElementById("statusSelect");
-    const noteEl = document.getElementById("noteInput");
-    const toggle = document.getElementById("syncToggle");
+  const planEl = document.getElementById("planInput");
+  const statusEl = document.getElementById("statusSelect");
+  const noteEl = document.getElementById("noteInput");
+  const toggle = document.getElementById("syncToggle");
 
-    const isSyncEnabled = ()=> (toggle && toggle.checked) || (localStorage.getItem(SYNC_KEY) === "1");
+  const isSyncEnabled = ()=> (toggle && toggle.checked) || (localStorage.getItem(SYNC_KEY) === "1");
 
-    const saveAndMaybeSync = ()=>{
-      saveData();
-      if(isSyncEnabled()){
-        // グループ未設定なら自分だけなので結果的に同期なし
-        syncProgressToGroup(state.currentStudent);
-      }
-      renderSyncInfo();
-      renderInputs(); // 同期した結果を即反映
+  const saveAndMaybeSync = ()=>{
+    saveData();
+    if(isSyncEnabled()){
+      // グループ未設定なら自分だけなので結果的に同期なし
+      syncProgressToGroup(state.currentStudent);
+    }
+    renderSyncInfo();
+    renderInputs(); // 同期した結果を即反映
+  };
+
+  if(planEl){
+    planEl.oninput = ()=>{
+      ensureStudent(state.currentStudent);
+      state.data.progressByStudent[state.currentStudent].plan = planEl.value;
+      saveAndMaybeSync();
     };
-}
-    if(planEl){
-      planEl.oninput = ()=>{
-        ensureStudent(state.currentStudent);
-        state.data.progressByStudent[state.currentStudent].plan = planEl.value;
-        saveAndMaybeSync();
-      };
-    }
-
-    if(statusEl){
-      statusEl.onchange = ()=>{
-        ensureStudent(state.currentStudent);
-        state.data.progressByStudent[state.currentStudent].status = statusEl.value;
-        saveAndMaybeSync();
-      };
-    }
-
-    if(noteEl){
-      // note は個人（同期しない）
-      noteEl.oninput = ()=>{
-        ensureStudent(state.currentStudent);
-        state.data.noteByStudent[state.currentStudent] = noteEl.value;
-        saveData();
-      };
-    }
   }
+
+  if(statusEl){
+    statusEl.onchange = ()=>{
+      ensureStudent(state.currentStudent);
+      state.data.progressByStudent[state.currentStudent].status = statusEl.value;
+      saveAndMaybeSync();
+    };
+  }
+
+  if(noteEl){
+    // note は個人（同期しない）
+    noteEl.oninput = ()=>{
+      ensureStudent(state.currentStudent);
+      state.data.noteByStudent[state.currentStudent] = noteEl.value;
+      saveData();
+    };
+  }
+}
 /**********************
  * 12時間チェック（個人・同期しない）
  **********************/
@@ -695,7 +695,15 @@ function bindSteps(){
         renderInputs();
       };
     }
-
+// 自動グループ
+  if(autoBtn){
+    autoBtn.onclick = ()=>{
+      if(!confirm("2・2・3（G1,G2,G3）で自動割り当てしますか？")) return;
+      autoAssignGroups223();
+    };
+  }
+}
+    
     const autoBtn = document.getElementById("btnAutoGroup");
     if(autoBtn){
       autoBtn.onclick = ()=>{
