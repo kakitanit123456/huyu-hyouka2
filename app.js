@@ -83,7 +83,47 @@ const defaultData = {
 function safeClone(obj){
   return JSON.parse(JSON.stringify(obj));
 }
+function readAsDataURL(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(String(r.result || ""));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
 
+// maxWidth を超える場合だけ縮小（JPEGにして容量も削減）
+async function resizeDataURL(dataUrl, maxWidth = 1280){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const w = img.width;
+      const h = img.height;
+
+      // 縮小不要
+      if(w <= maxWidth){
+        resolve(dataUrl);
+        return;
+      }
+
+      const ratio = maxWidth / w;
+      const nw = Math.round(w * ratio);
+      const nh = Math.round(h * ratio);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = nw;
+      canvas.height = nh;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, nw, nh);
+
+      // jpeg 0.85（必要なら調整）
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
 /* ====================================================
    5) loadData / saveData
    - ここが「古い保存データでも壊れない」ための心臓部
@@ -161,14 +201,14 @@ d.assignments.forEach(a=>{
 
     // 名簿が空なら最低1人
     if(d.students.length === 0){
-      d.students = ["児童1"];
-      d.studentGroup["児童1"] = "";
-      d.stepsByStudent["児童1"] = Array.from({length:12}, ()=> false);
-      d.assignStatusByStudent["児童1"] = {};
-      d.assignments.forEach(a=>{
-        d.assignStatusByStudent["児童1"][a.id] = { submitted:false };
-      });
-    }
+  d.students = ["児童1"];
+  d.studentGroup["児童1"] = "";
+  d.stepsByStudent["児童1"] = Array.from({length:12}, ()=> false);
+  d.assignStatusByStudent["児童1"] = {};
+  d.assignments.forEach(a=>{
+    d.assignStatusByStudent["児童1"][a.id] = { submitted:false, memo:"", photos:["","",""] };
+  });
+}
 
     return d;
 
