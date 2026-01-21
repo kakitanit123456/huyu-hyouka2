@@ -190,7 +190,33 @@
       <h2>記録</h2>
       <span class="hint">提出物・画像は個人（同期しない）</span>
     </div>
+<!-- ★ 画面切り替え（個人 / 一覧） -->
+<div class="row" style="margin-bottom:10px">
+  <button class="btn primary" id="btnViewPersonal" type="button">個人</button>
+  <button class="btn" id="btnViewOverview" type="button">一覧</button>
+</div>
 
+<!-- ★ 個人ビュー（今までの中身を全部ここに入れる） -->
+<div id="viewPersonal">
+  <!-- ここに今の「計画〜提出物〜12時間チェック」のカード群が入る想定 -->
+</div>
+
+<!-- ★ 一覧ビュー（最初は非表示） -->
+<div id="viewOverview" style="display:none">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:700">12時間チェック 一覧</div>
+      <span class="badge" id="overviewHint">タップで児童を切替</span>
+    </div>
+    <div class="small" style="margin-top:8px">
+      ※ 行をクリックすると、その児童に切り替わって「個人」画面に戻ります
+    </div>
+
+    <div id="overviewTable" style="margin-top:10px"></div>
+  </div>
+</div>
+
+    
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div style="font-size:14px;font-weight:700">計画（plan）／進捗（status）</div>
@@ -390,6 +416,34 @@ const state = {
   currentStudent: null
 };
 
+// ===== View switch (personal / overview) =====
+function setView(mode){
+  const personal = document.getElementById("viewPersonal");
+  const overview = document.getElementById("viewOverview");
+  const bP = document.getElementById("btnViewPersonal");
+  const bO = document.getElementById("btnViewOverview");
+  if(!personal || !overview || !bP || !bO) return;
+
+  const isOverview = (mode === "overview");
+  personal.style.display = isOverview ? "none" : "block";
+  overview.style.display = isOverview ? "block" : "none";
+
+  bP.classList.toggle("primary", !isOverview);
+  bO.classList.toggle("primary", isOverview);
+
+  if(isOverview){
+    renderOverview(); // 一覧を描画
+  }
+}
+
+function bindViewButtons(){
+  const bP = document.getElementById("btnViewPersonal");
+  const bO = document.getElementById("btnViewOverview");
+  if(bP) bP.onclick = ()=> setView("personal");
+  if(bO) bO.onclick = ()=> setView("overview");
+}
+
+  
 // ===== Helpers =====
 function ensureStudent(name){
   if(state.data.studentGroup[name] == null) state.data.studentGroup[name] = "";
