@@ -361,11 +361,18 @@ function loadData(){
     const d = raw ? JSON.parse(raw) : safeClone(defaultData);
 
     if(!Array.isArray(d.students)) d.students = safeClone(defaultData.students);
-    if(!d.studentGroup || typeof d.studentGroup !== "object") d.studentGroup = {};
-    if(!d.progressByStudent || typeof d.progressByStudent !== "object") d.progressByStudent = {};
-    if(!d.noteByStudent || typeof d.noteByStudent !== "object") d.noteByStudent = {};
-    if(!d.photosByStudent || typeof d.photosByStudent !== "object") d.photosByStudent = {};
-    if(!d.stepsByStudent || typeof d.stepsByStudent !== "object") d.stepsByStudent = {};
+if(!d.studentGroup || typeof d.studentGroup !== "object") d.studentGroup = {};
+if(!d.progressByStudent || typeof d.progressByStudent !== "object") d.progressByStudent = {};
+if(!d.noteByStudent || typeof d.noteByStudent !== "object") d.noteByStudent = {};
+if(!d.photosByStudent || typeof d.photosByStudent !== "object") d.photosByStudent = {};
+if(!d.stepsByStudent || typeof d.stepsByStudent !== "object") d.stepsByStudent = {};
+
+// ★ 追加：stepラベルの保存領域を補完
+if(!Array.isArray(d.stepLabelsGlobal) || d.stepLabelsGlobal.length !== 12){
+  d.stepLabelsGlobal = safeClone(defaultData.stepLabelsGlobal);
+}
+if(!d.stepLabelsByStudent || typeof d.stepLabelsByStudent !== "object"){
+  d.stepLabelsByStudent = {};
 }
 /* [ADD] stepラベル保存領域の補完（loadData内） */
  // ★ 追加：stepラベルの保存領域を補完
@@ -828,23 +835,22 @@ function bindSteps(){
   if(!wrap) return;
 
   wrap.addEventListener("click", (e)=>{
-    const t = e.target;
-    if(!(t instanceof HTMLElement)) return;
-    if(t.tagName !== "BUTTON") return;
+  const btn = e.target.closest("button");
+  if(!btn || !wrap.contains(btn)) return;
 
-    const idxStr = t.dataset.stepIndex;
-    if(idxStr == null) return;
+  const idxStr = btn.dataset.stepIndex;
+  if(idxStr == null) return;
 
-    const idx = Number(idxStr);
-    if(Number.isNaN(idx) || idx < 0 || idx > 11) return;
+  const idx = Number(idxStr);
+  if(Number.isNaN(idx) || idx < 0 || idx > 11) return;
 
-    ensureStudent(state.currentStudent);
-    const arr = state.data.stepsByStudent[state.currentStudent];
+  ensureStudent(state.currentStudent);
+  const arr = state.data.stepsByStudent[state.currentStudent];
 
-    arr[idx] = !arr[idx];
-    saveData();
-    renderSteps();
-  });
+  arr[idx] = !arr[idx];
+  saveData();
+  renderSteps();
+});
 
   if(clearBtn){
     clearBtn.onclick = ()=>{
