@@ -482,8 +482,9 @@ if(memoEl){
   toggleBtn.onclick = ()=>{
     ensureStudent(student);
 
-    // submitted を反転
-    state.data.assignStatusByStudent[student][assignId].submitted = !submitted;
+    // submitted を反転（最新値で）
+   const cur = !!state.data.assignStatusByStudent?.[student]?.[assignId]?.submitted;
+   state.data.assignStatusByStudent[student][assignId].submitted = !cur;
 
     saveData();
     renderPersonalAssignments();
