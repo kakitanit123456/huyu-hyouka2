@@ -1539,16 +1539,19 @@ function resetAll(){
   renderStudentSelect();
   renderGroupUI();
   renderSteps();
+  renderPersonalAssignments(); // 提出物UIも再構築
 
   alert("全データを削除しました。");
 
-// 提出物UIを再構築
-renderPersonalAssignments();
-
-// サイドが存在しているときだけ強制更新
-if(document.getElementById("sideDrawer")){
-  renderSideOverview(true);
+  // サイドが存在しているときだけ強制更新
+  if(document.getElementById("sideDrawer")){
+    renderSideOverview(true);
+  }
 }
+
+/* =========================
+   View buttons
+========================= */
 function bindViewButtons(){
   const bP = document.getElementById("btnViewPersonal");
   const bO = document.getElementById("btnViewOverview");
