@@ -529,6 +529,32 @@ if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[
       renderSyncInfo();
       renderInputs(); // 同期した結果を即反映
     };
+}
+    if(planEl){
+      planEl.oninput = ()=>{
+        ensureStudent(state.currentStudent);
+        state.data.progressByStudent[state.currentStudent].plan = planEl.value;
+        saveAndMaybeSync();
+      };
+    }
+
+    if(statusEl){
+      statusEl.onchange = ()=>{
+        ensureStudent(state.currentStudent);
+        state.data.progressByStudent[state.currentStudent].status = statusEl.value;
+        saveAndMaybeSync();
+      };
+    }
+
+    if(noteEl){
+      // note は個人（同期しない）
+      noteEl.oninput = ()=>{
+        ensureStudent(state.currentStudent);
+        state.data.noteByStudent[state.currentStudent] = noteEl.value;
+        saveData();
+      };
+    }
+  }
 /**********************
  * 12時間チェック（個人・同期しない）
  **********************/
@@ -608,33 +634,6 @@ function bindSteps(){
       renderSteps();
     };
   }
-}
-    if(planEl){
-      planEl.oninput = ()=>{
-        ensureStudent(state.currentStudent);
-        state.data.progressByStudent[state.currentStudent].plan = planEl.value;
-        saveAndMaybeSync();
-      };
-    }
-
-    if(statusEl){
-      statusEl.onchange = ()=>{
-        ensureStudent(state.currentStudent);
-        state.data.progressByStudent[state.currentStudent].status = statusEl.value;
-        saveAndMaybeSync();
-      };
-    }
-
-    if(noteEl){
-      // note は個人（同期しない）
-      noteEl.oninput = ()=>{
-        ensureStudent(state.currentStudent);
-        state.data.noteByStudent[state.currentStudent] = noteEl.value;
-        saveData();
-      };
-    }
-  }
-
   // ===== UI: add/delete student =====
   function bindRosterButtons(){
     const addBtn = document.getElementById("btnAddStudent");
