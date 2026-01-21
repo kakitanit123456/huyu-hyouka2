@@ -108,3 +108,45 @@ textarea{min-height:84px; resize:vertical}
   padding:2px 8px; border-radius:999px; border:1px solid var(--line);
   background:var(--chip); color:var(--muted); font-size:12px;
 }
+/* ===== 右スライドの一覧ドロワー ===== */
+.drawerOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+  z-index: 50;
+}
+
+.drawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(420px, 92vw);
+  height: 100vh;
+  background: var(--bg);
+  border-left: 1px solid var(--line);
+  transform: translateX(105%);
+  transition: transform .22s ease;
+  z-index: 60;
+  overflow: auto;
+}
+
+.drawerInner{
+  padding: 14px;
+}
+
+/* 開いた状態 */
+.drawer.isOpen{
+  transform: translateX(0);
+}
+.drawerOverlay.isOpen{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* モバイルで押しやすく */
+#btnToggleSide{
+  margin-left: auto;
+}
