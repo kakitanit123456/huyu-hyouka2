@@ -302,7 +302,7 @@
     studentGroup: {},
     progressByStudent: {},
     noteByStudent: {},
-    photosByStudent: {}
+    photosByStudent: {},
     stepsByStudent: {}            // { "山田": [true,false,...(12)] } ← 個人（同期しない）
   };
 
@@ -324,20 +324,22 @@
 
       // 児童ごとの行を必ず用意（欠けてても復元）
       d.students.forEach(name=>{
-        if(d.studentGroup[name] == null) d.studentGroup[name] = "";
-        if(d.progressByStudent[name] == null) d.progressByStudent[name] = { plan:"", status:"" };
-        else{
-          // 旧キー救済
-          if(d.progressByStudent[name].plan == null) d.progressByStudent[name].plan = "";
-          if(d.progressByStudent[name].status == null) d.progressByStudent[name].status = d.progressByStudent[name].done || "";
-        }
-        if(d.noteByStudent[name] == null) d.noteByStudent[name] = "";
-        if(d.photosByStudent[name] == null) d.photosByStudent[name] = "";
-      }
-        // 12時間チェック（個人）
-        if(!Array.isArray(d.stepsByStudent[name]) || d.stepsByStudent[name].length !== 12){
-        d.stepsByStudent[name] = Array.from({length:12}, ()=> false);
-}
+  if(d.studentGroup[name] == null) d.studentGroup[name] = "";
+
+  if(d.progressByStudent[name] == null) d.progressByStudent[name] = { plan:"", status:"" };
+  else{
+    if(d.progressByStudent[name].plan == null) d.progressByStudent[name].plan = "";
+    if(d.progressByStudent[name].status == null) d.progressByStudent[name].status = d.progressByStudent[name].done || "";
+  }
+
+  if(d.noteByStudent[name] == null) d.noteByStudent[name] = "";
+  if(d.photosByStudent[name] == null) d.photosByStudent[name] = "";
+
+  // ★12時間チェック（個人）
+  if(!Array.isArray(d.stepsByStudent[name]) || d.stepsByStudent[name].length !== 12){
+    d.stepsByStudent[name] = Array.from({length:12}, ()=> false);
+  }
+});
                         );
 
       // studentsが空なら最低1名
