@@ -399,6 +399,9 @@ function renderPersonalAssignments(){
   initPersonalAssignments();
 
   const assigns = getAssignments();
+   if(!state.currentAssignId || !assigns.some(a => a.id === state.currentAssignId)){
+  state.currentAssignId = assigns[0].id;
+}
   sel.innerHTML = "";
 
   assigns.forEach(a=>{
