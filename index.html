@@ -261,264 +261,253 @@
 </div>
 
 <script>
-  /**********************
-   * Part2: localStorage + roster/group/sync + personal(note/photo)
-   **********************/
+/**********************
+ * Part2: localStorage + roster/group/sync + personal(note/photo) + steps(12)
+ **********************/
 
-  // ===== Storage keys =====
-  const THEME_KEY = "rika4_theme_v3"; // 既存のまま
-  const DATA_KEY  = "rika4_evaltool_v1";
-  const SYNC_KEY  = "rika4_sync_enabled_v1";
+// ===== Storage keys =====
+const THEME_KEY = "rika4_theme_v3";
+const DATA_KEY  = "rika4_evaltool_v1";
+const SYNC_KEY  = "rika4_sync_enabled_v1";
 
-  // ===== Feature flags（要らなければ false に）=====
-  const FEATURES = {
-    exportImport: true,
-  };
+// ===== Theme =====
+function applyTheme(mode){
+  document.documentElement.dataset.theme = mode;
+  localStorage.setItem(THEME_KEY, mode);
 
-  // ===== Theme（Part1のまま使える）=====
-  function applyTheme(mode){
-    document.documentElement.dataset.theme = mode;
-    localStorage.setItem(THEME_KEY, mode);
-
-    const btn = document.getElementById("btnTheme");
-    if(btn){
-      btn.textContent = (mode === "light") ? "☀️" : "🌙";
-      btn.title = (mode === "light") ? "ダークに切り替え" : "ライトに切り替え";
-    }
+  const btn = document.getElementById("btnTheme");
+  if(btn){
+    btn.textContent = (mode === "light") ? "☀️" : "🌙";
+    btn.title = (mode === "light") ? "ダークに切り替え" : "ライトに切り替え";
   }
-  function toggleTheme(){
-    const cur = document.documentElement.dataset.theme || "dark";
-    applyTheme(cur === "dark" ? "light" : "dark");
-  }
+}
+function toggleTheme(){
+  const cur = document.documentElement.dataset.theme || "dark";
+  applyTheme(cur === "dark" ? "light" : "dark");
+}
 
-  // ===== Data model =====
-  // students: string[]
-  // studentGroup: { [name]: "" | "G1" | "G2" | "G3" }
-  // progressByStudent: { [name]: { plan, status } }  ← 同期対象
-  // noteByStudent: { [name]: string }                ← 個人
-  // photosByStudent: { [name]: dataURL }             ← 個人
-  const defaultData = {
-    students: ["（サンプル）児童A","（サンプル）児童B","（サンプル）児童C","（サンプル）児童D","（サンプル）児童E","（サンプル）児童F","（サンプル）児童G"],
-    studentGroup: {},
-    progressByStudent: {},
-    noteByStudent: {},
-    photosByStudent: {},
-    stepsByStudent: {}            // { "山田": [true,false,...(12)] } ← 個人（同期しない）
-  };
+// ===== Data model =====
+const defaultData = {
+  students: ["（サンプル）児童A","（サンプル）児童B","（サンプル）児童C","（サンプル）児童D","（サンプル）児童E","（サンプル）児童F","（サンプル）児童G"],
+  studentGroup: {},
+  progressByStudent: {},
+  noteByStudent: {},
+  photosByStudent: {},
+  stepsByStudent: {} // { name: [true..12] } 個人（同期しない）
+};
 
-  function safeClone(obj){
-    return JSON.parse(JSON.stringify(obj));
-  }
+function safeClone(obj){
+  return JSON.parse(JSON.stringify(obj));
+}
 
-  function loadData(){
-    try{
-      const raw = localStorage.getItem(DATA_KEY);
-      const d = raw ? JSON.parse(raw) : safeClone(defaultData);
+function loadData(){
+  try{
+    const raw = localStorage.getItem(DATA_KEY);
+    const d = raw ? JSON.parse(raw) : safeClone(defaultData);
 
-      if(!Array.isArray(d.students)) d.students = safeClone(defaultData.students);
-      if(!d.studentGroup || typeof d.studentGroup !== "object") d.studentGroup = {};
-      if(!d.progressByStudent || typeof d.progressByStudent !== "object") d.progressByStudent = {};
-      if(!d.noteByStudent || typeof d.noteByStudent !== "object") d.noteByStudent = {};
-      if(!d.photosByStudent || typeof d.photosByStudent !== "object") d.photosByStudent = {};
-      if(!d.stepsByStudent || typeof d.stepsByStudent !== "object") d.stepsByStudent = {};
+    if(!Array.isArray(d.students)) d.students = safeClone(defaultData.students);
+    if(!d.studentGroup || typeof d.studentGroup !== "object") d.studentGroup = {};
+    if(!d.progressByStudent || typeof d.progressByStudent !== "object") d.progressByStudent = {};
+    if(!d.noteByStudent || typeof d.noteByStudent !== "object") d.noteByStudent = {};
+    if(!d.photosByStudent || typeof d.photosByStudent !== "object") d.photosByStudent = {};
+    if(!d.stepsByStudent || typeof d.stepsByStudent !== "object") d.stepsByStudent = {};
 
-      // 児童ごとの行を必ず用意（欠けてても復元）
-      d.students.forEach(name=>{
-  if(d.studentGroup[name] == null) d.studentGroup[name] = "";
+    // 児童ごとの不足を補完
+    d.students.forEach(name=>{
+      if(d.studentGroup[name] == null) d.studentGroup[name] = "";
 
-  if(d.progressByStudent[name] == null) d.progressByStudent[name] = { plan:"", status:"" };
-  else{
-    if(d.progressByStudent[name].plan == null) d.progressByStudent[name].plan = "";
-    if(d.progressByStudent[name].status == null) d.progressByStudent[name].status = d.progressByStudent[name].done || "";
-  }
-
-  if(d.noteByStudent[name] == null) d.noteByStudent[name] = "";
-  if(d.photosByStudent[name] == null) d.photosByStudent[name] = "";
-
-  // ★12時間チェック（個人）
-  if(!Array.isArray(d.stepsByStudent[name]) || d.stepsByStudent[name].length !== 12){
-    d.stepsByStudent[name] = Array.from({length:12}, ()=> false);
-  }
-});
-
-      // studentsが空なら最低1名
-      if(d.students.length === 0){
-        d.students = ["児童1"];
-        d.studentGroup["児童1"] = "";
-        d.progressByStudent["児童1"] = { plan:"", status:"" };
-        d.noteByStudent["児童1"] = "";
-        d.photosByStudent["児童1"] = "";
+      if(d.progressByStudent[name] == null) d.progressByStudent[name] = { plan:"", status:"" };
+      else{
+        if(d.progressByStudent[name].plan == null) d.progressByStudent[name].plan = "";
+        if(d.progressByStudent[name].status == null) d.progressByStudent[name].status = "";
       }
 
-      return d;
-    }catch(e){
-      console.warn("loadData error:", e);
-      return safeClone(defaultData);
+      if(d.noteByStudent[name] == null) d.noteByStudent[name] = "";
+      if(d.photosByStudent[name] == null) d.photosByStudent[name] = "";
+
+      if(!Array.isArray(d.stepsByStudent[name]) || d.stepsByStudent[name].length !== 12){
+        d.stepsByStudent[name] = Array.from({length:12}, ()=> false);
+      }
+    });
+
+    if(d.students.length === 0){
+      d.students = ["児童1"];
+      d.studentGroup["児童1"] = "";
+      d.progressByStudent["児童1"] = { plan:"", status:"" };
+      d.noteByStudent["児童1"] = "";
+      d.photosByStudent["児童1"] = "";
+      d.stepsByStudent["児童1"] = Array.from({length:12}, ()=> false);
     }
+
+    return d;
+  }catch(e){
+    console.warn("loadData error:", e);
+    return safeClone(defaultData);
   }
-
-  function saveData(){
-    localStorage.setItem(DATA_KEY, JSON.stringify(state.data));
-  }
-
-  const state = {
-    data: loadData(),
-    currentStudent: null
-  };
-
-  // ===== Helpers =====
-  function ensureStudent(name){
-    if(!state.data.studentGroup[name]) state.data.studentGroup[name] = "";
-    if(!state.data.progressByStudent[name]) state.data.progressByStudent[name] = { plan:"", status:"" };
-    if(state.data.noteByStudent[name] == null) state.data.noteByStudent[name] = "";
-    if(state.data.photosByStudent[name] == null) state.data.photosByStudent[name] = "";
-    // 12時間チェック（個人）
-if(!state.data.stepsByStudent) state.data.stepsByStudent = {};
-if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[name].length !== 12){
-  state.data.stepsByStudent[name] = Array.from({length:12}, ()=> false);
 }
+
+function saveData(){
+  localStorage.setItem(DATA_KEY, JSON.stringify(state.data));
+}
+
+const state = {
+  data: loadData(),
+  currentStudent: null
+};
+
+// ===== Helpers =====
+function ensureStudent(name){
+  if(state.data.studentGroup[name] == null) state.data.studentGroup[name] = "";
+  if(state.data.progressByStudent[name] == null) state.data.progressByStudent[name] = { plan:"", status:"" };
+  if(state.data.noteByStudent[name] == null) state.data.noteByStudent[name] = "";
+  if(state.data.photosByStudent[name] == null) state.data.photosByStudent[name] = "";
+  if(!state.data.stepsByStudent) state.data.stepsByStudent = {};
+  if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[name].length !== 12){
+    state.data.stepsByStudent[name] = Array.from({length:12}, ()=> false);
   }
+}
 
-  function getGroupMembers(studentName){
-    const g = state.data.studentGroup?.[studentName] || "";
-    if(!g) return [studentName];
-    return state.data.students.filter(n => (state.data.studentGroup?.[n] || "") === g);
-  }
+function getGroupMembers(studentName){
+  const g = (state.data.studentGroup && state.data.studentGroup[studentName]) || "";
+  if(!g) return [studentName];
+  return state.data.students.filter(n => ((state.data.studentGroup && state.data.studentGroup[n]) || "") === g);
+}
 
-  // plan/status だけ同期（note/photo は同期しない）
-  function syncProgressToGroup(fromStudent){
-    const members = getGroupMembers(fromStudent);
-    ensureStudent(fromStudent);
+// plan/status だけ同期（note/photo/steps は同期しない）
+function syncProgressToGroup(fromStudent){
+  const members = getGroupMembers(fromStudent);
+  ensureStudent(fromStudent);
 
-    const src = state.data.progressByStudent[fromStudent];
+  const src = state.data.progressByStudent[fromStudent];
 
-    members.forEach(m=>{
-      ensureStudent(m);
-      state.data.progressByStudent[m] = {
-        plan: src.plan || "",
-        status: src.status || ""
-      };
-    });
+  members.forEach(m=>{
+    ensureStudent(m);
+    state.data.progressByStudent[m] = {
+      plan: src.plan || "",
+      status: src.status || ""
+    };
+  });
 
+  saveData();
+}
+
+// ===== UI: student select =====
+function renderStudentSelect(){
+  const sel = document.getElementById("studentSelect");
+  if(!sel) return;
+
+  sel.innerHTML = "";
+  state.data.students.forEach(name=>{
+    const o = document.createElement("option");
+    o.value = name;
+    o.textContent = name;
+    sel.appendChild(o);
+  });
+
+  if(!state.currentStudent) state.currentStudent = state.data.students[0];
+  if(!state.data.students.includes(state.currentStudent)) state.currentStudent = state.data.students[0];
+  sel.value = state.currentStudent;
+
+  sel.onchange = ()=>{
+    state.currentStudent = sel.value;
+    renderGroupUI();
+    renderSyncInfo();
+    renderInputs();
+    renderSteps();
     saveData();
-  }
-    // ===== UI: student select =====
-  function renderStudentSelect(){
-    const sel = document.getElementById("studentSelect");
-    if(!sel) return;
+  };
+}
 
-    sel.innerHTML = "";
-    state.data.students.forEach(name=>{
-      const o = document.createElement("option");
-      o.value = name;
-      o.textContent = name;
-      sel.appendChild(o);
-    });
+// ===== UI: group =====
+function renderGroupUI(){
+  const sel = document.getElementById("groupSelect");
+  const cnt = document.getElementById("groupCount");
+  if(!sel || !cnt) return;
 
-    if(!state.currentStudent) state.currentStudent = state.data.students[0];
-    if(!state.data.students.includes(state.currentStudent)) state.currentStudent = state.data.students[0];
-    sel.value = state.currentStudent;
+  ensureStudent(state.currentStudent);
 
-    sel.onchange = ()=>{
-      state.currentStudent = sel.value;
-      renderGroupUI();
-      renderSyncInfo();
-      renderInputs();
-      renderSteps();   // ★追加：児童ごとのチェックを描画し直す
-      saveData();
-    };
-  }
+  const g = (state.data.studentGroup && state.data.studentGroup[state.currentStudent]) || "";
+  sel.value = g;
 
-  // ===== UI: group =====
-  function renderGroupUI(){
-    const sel = document.getElementById("groupSelect");
-    const cnt = document.getElementById("groupCount");
-    if(!sel || !cnt) return;
+  const counts = {G1:0, G2:0, G3:0, "":0};
+  state.data.students.forEach(n=>{
+    const gg = (state.data.studentGroup && state.data.studentGroup[n]) || "";
+    counts[gg] = (counts[gg] ?? 0) + 1;
+  });
 
-    ensureStudent(state.currentStudent);
+  cnt.textContent = `人数：G1=${counts.G1} / G2=${counts.G2} / G3=${counts.G3}（未=${counts[""]}）`;
 
-    const g = state.data.studentGroup?.[state.currentStudent] || "";
-    sel.value = g;
-
-    const counts = {G1:0, G2:0, G3:0, "":0};
-    state.data.students.forEach(n=>{
-      const gg = state.data.studentGroup?.[n] || "";
-      counts[gg] = (counts[gg] ?? 0) + 1;
-    });
-
-    cnt.textContent = `人数：G1=${counts.G1} / G2=${counts.G2} / G3=${counts.G3}（未=${counts[""]}）`;
-
-    sel.onchange = ()=>{
-      state.data.studentGroup = state.data.studentGroup || {};
-      state.data.studentGroup[state.currentStudent] = sel.value;
-      saveData();
-      renderGroupUI();
-      renderSyncInfo();
-    };
-  }
-
-  function autoAssignGroups223(){
-    const list = state.data.students.slice();
-    const plan = ["G1","G1","G2","G2","G3","G3","G3"];
-    state.data.studentGroup = state.data.studentGroup || {};
-    list.forEach((n,i)=>{
-      state.data.studentGroup[n] = plan[i] || "G3";
-    });
+  sel.onchange = ()=>{
+    if(!state.data.studentGroup) state.data.studentGroup = {};
+    state.data.studentGroup[state.currentStudent] = sel.value;
     saveData();
     renderGroupUI();
     renderSyncInfo();
+  };
+}
+
+function autoAssignGroups223(){
+  const list = state.data.students.slice();
+  const plan = ["G1","G1","G2","G2","G3","G3","G3"];
+  if(!state.data.studentGroup) state.data.studentGroup = {};
+  list.forEach((n,i)=>{
+    state.data.studentGroup[n] = plan[i] || "G3";
+  });
+  saveData();
+  renderGroupUI();
+  renderSyncInfo();
+}
+
+// ===== UI: sync toggle & info =====
+function renderSyncToggle(){
+  const toggle = document.getElementById("syncToggle");
+  if(!toggle) return;
+  toggle.checked = (localStorage.getItem(SYNC_KEY) === "1");
+  toggle.onchange = ()=>{
+    localStorage.setItem(SYNC_KEY, toggle.checked ? "1" : "0");
+    renderSyncInfo();
+  };
+}
+
+function renderSyncInfo(){
+  const info = document.getElementById("syncInfo");
+  if(!info) return;
+
+  const enabled = (localStorage.getItem(SYNC_KEY) === "1");
+  const members = getGroupMembers(state.currentStudent);
+  const g = (state.data.studentGroup && state.data.studentGroup[state.currentStudent]) || "";
+
+  if(!enabled){
+    info.textContent = "同期：OFF（この児童だけ更新）";
+    return;
   }
+  info.textContent = g
+    ? `同期：ON／対象グループ：${g}（同期先 ${members.length}人）`
+    : "同期：ON／グループ未設定（この児童だけ＝同期なし）";
+}
 
-  // ===== UI: sync toggle & info =====
-  function renderSyncToggle(){
-    const toggle = document.getElementById("syncToggle");
-    if(!toggle) return;
-    toggle.checked = (localStorage.getItem(SYNC_KEY) === "1");
-    toggle.onchange = ()=>{
-      localStorage.setItem(SYNC_KEY, toggle.checked ? "1" : "0");
-      renderSyncInfo();
-    };
-  }
+// ===== UI: inputs (plan/status/note/photo) =====
+function renderInputs(){
+  ensureStudent(state.currentStudent);
 
-  function renderSyncInfo(){
-    const info = document.getElementById("syncInfo");
-    if(!info) return;
+  const planEl = document.getElementById("planInput");
+  const statusEl = document.getElementById("statusSelect");
+  const noteEl = document.getElementById("noteInput");
 
-    const enabled = (localStorage.getItem(SYNC_KEY) === "1");
-    const members = getGroupMembers(state.currentStudent);
-    const g = state.data.studentGroup?.[state.currentStudent] || "";
+  if(planEl) planEl.value = state.data.progressByStudent[state.currentStudent].plan || "";
+  if(statusEl) statusEl.value = state.data.progressByStudent[state.currentStudent].status || "";
+  if(noteEl) noteEl.value = state.data.noteByStudent[state.currentStudent] || "";
 
-    if(!enabled){
-      info.textContent = "同期：OFF（この児童だけ更新）";
-      return;
-    }
-    info.textContent = g
-      ? `同期：ON／対象グループ：${g}（同期先 ${members.length}人）`
-      : "同期：ON／グループ未設定（この児童だけ＝同期なし）";
-  }
+  renderPhotoPreview();
+}
 
-  // ===== UI: inputs (plan/status/note/photo) =====
-  function renderInputs(){
-    ensureStudent(state.currentStudent);
-
-    const planEl = document.getElementById("planInput");
-    const statusEl = document.getElementById("statusSelect");
-    const noteEl = document.getElementById("noteInput");
-
-    if(planEl) planEl.value = state.data.progressByStudent[state.currentStudent].plan || "";
-    if(statusEl) statusEl.value = state.data.progressByStudent[state.currentStudent].status || "";
-    if(noteEl) noteEl.value = state.data.noteByStudent[state.currentStudent] || "";
-
-    renderPhotoPreview();
-  }
 function bindInputs(){
   const planEl = document.getElementById("planInput");
   const statusEl = document.getElementById("statusSelect");
   const noteEl = document.getElementById("noteInput");
   const toggle = document.getElementById("syncToggle");
 
-  const isSyncEnabled = ()=> 
-    (toggle && toggle.checked) || (localStorage.getItem(SYNC_KEY) === "1");
+  const isSyncEnabled = ()=> (toggle && toggle.checked) || (localStorage.getItem(SYNC_KEY) === "1");
 
   const saveAndMaybeSync = ()=>{
     saveData();
@@ -553,14 +542,15 @@ function bindInputs(){
     };
   }
 }
+
 /**********************
  * 12時間チェック（個人・同期しない）
  **********************/
 function updateStepCount(){
   const badge = document.getElementById("stepCount");
   if(!badge) return;
-  ensureStudent(state.currentStudent);
 
+  ensureStudent(state.currentStudent);
   const arr = state.data.stepsByStudent[state.currentStudent] || [];
   const done = arr.filter(Boolean).length;
   badge.textContent = `${done}/12`;
@@ -573,23 +563,16 @@ function renderSteps(){
   ensureStudent(state.currentStudent);
   const arr = state.data.stepsByStudent[state.currentStudent];
 
-  // いったん中身を消して作り直す（児童切替に強い）
   wrap.innerHTML = "";
 
   for(let i=0;i<12;i++){
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn";                 // 既存の見た目を流用
+    btn.className = "btn";
     btn.textContent = String(i+1);
-    btn.dataset.stepIndex = String(i);     // 何番かを持たせる
+    btn.dataset.stepIndex = String(i);
 
-    // ON/OFFで見た目を変える（軽く）
-    if(arr[i]){
-      btn.style.borderColor = "var(--accent)";
-    }else{
-      btn.style.borderColor = "var(--line)";
-    }
-
+    btn.style.borderColor = arr[i] ? "var(--accent)" : "var(--line)";
     wrap.appendChild(btn);
   }
 
@@ -601,7 +584,6 @@ function bindSteps(){
   const clearBtn = document.getElementById("btnClearSteps");
   if(!wrap) return;
 
-  // 12ボタンをクリックしたらトグル保存（イベント委任）
   wrap.addEventListener("click", (e)=>{
     const t = e.target;
     if(!(t instanceof HTMLElement)) return;
@@ -616,13 +598,11 @@ function bindSteps(){
     ensureStudent(state.currentStudent);
     const arr = state.data.stepsByStudent[state.currentStudent];
 
-    arr[idx] = !arr[idx]; // ON/OFF反転
+    arr[idx] = !arr[idx];
     saveData();
-
-    renderSteps(); // 反映
+    renderSteps();
   });
 
-  // 全解除ボタン
   if(clearBtn){
     clearBtn.onclick = ()=>{
       if(!confirm("この児童の12時間チェックをすべて外しますか？")) return;
@@ -633,273 +613,229 @@ function bindSteps(){
     };
   }
 }
-  // ===== UI: add/delete student =====
-  function bindRosterButtons(){
-    const addBtn = document.getElementById("btnAddStudent");
-    const delBtn = document.getElementById("btnDeleteStudent");
-    const inp = document.getElementById("newStudentName");
 
-    if(addBtn && inp){
-      addBtn.onclick = ()=>{
-        const name = (inp.value || "").trim();
-        if(!name) return alert("児童名を入力してください。");
-        if(state.data.students.includes(name)) return alert("同名の児童がすでにいます。");
+// ===== UI: add/delete student =====
+function bindRosterButtons(){
+  const addBtn = document.getElementById("btnAddStudent");
+  const delBtn = document.getElementById("btnDeleteStudent");
+  const inp = document.getElementById("newStudentName");
 
-        state.data.students.push(name);
-        state.data.studentGroup[name] = "";
-        state.data.progressByStudent[name] = { plan:"", status:"" };
-        state.data.noteByStudent[name] = "";
-        state.data.photosByStudent[name] = "";
+  if(addBtn && inp){
+    addBtn.onclick = ()=>{
+      const name = (inp.value || "").trim();
+      if(!name) return alert("児童名を入力してください。");
+      if(state.data.students.includes(name)) return alert("同名の児童がすでにいます。");
 
-        state.currentStudent = name;
-        inp.value = "";
-        saveData();
+      state.data.students.push(name);
+      ensureStudent(name);
 
-        renderStudentSelect();
-        renderGroupUI();
-        renderSyncInfo();
-        renderInputs();
-      };
+      state.currentStudent = name;
+      inp.value = "";
+      saveData();
 
-      inp.onkeydown = (e)=>{
-        if(e.key === "Enter") addBtn.click();
-      };
-    }
+      renderStudentSelect();
+      renderGroupUI();
+      renderSyncInfo();
+      renderInputs();
+      renderSteps();
+    };
 
-    if(delBtn){
-      delBtn.onclick = ()=>{
-        if(state.data.students.length <= 1){
-          return alert("最後の1人は削除できません。");
-        }
-        const target = state.currentStudent;
-        if(!confirm(`「${target}」を名簿から削除しますか？（保存データも削除）`)) return;
+    inp.onkeydown = (e)=>{
+      if(e.key === "Enter") addBtn.click();
+    };
+  }
 
-        // 名簿から削除
-        state.data.students = state.data.students.filter(n => n !== target);
+  if(delBtn){
+    delBtn.onclick = ()=>{
+      if(state.data.students.length <= 1){
+        return alert("最後の1人は削除できません。");
+      }
+      const target = state.currentStudent;
+      if(!confirm(`「${target}」を名簿から削除しますか？（保存データも削除）`)) return;
 
-        // 関連データ削除
-        delete state.data.studentGroup[target];
-        delete state.data.progressByStudent[target];
-        delete state.data.noteByStudent[target];
-        delete state.data.photosByStudent[target];
+      state.data.students = state.data.students.filter(n => n !== target);
 
-        // current を先頭に
-        state.currentStudent = state.data.students[0];
-        saveData();
+      delete state.data.studentGroup[target];
+      delete state.data.progressByStudent[target];
+      delete state.data.noteByStudent[target];
+      delete state.data.photosByStudent[target];
+      delete state.data.stepsByStudent[target];
 
-        renderStudentSelect();
-        renderGroupUI();
-        renderSyncInfo();
-        renderInputs();
-      };
-    }
-// 自動グループ
+      state.currentStudent = state.data.students[0];
+      saveData();
+
+      renderStudentSelect();
+      renderGroupUI();
+      renderSyncInfo();
+      renderInputs();
+      renderSteps();
+    };
+  }
+
+  const autoBtn = document.getElementById("btnAutoGroup");
   if(autoBtn){
     autoBtn.onclick = ()=>{
-      if(!confirm("2・2・3（G1,G2,G3）で自動割り当てしますか？")) return;
+      if(!confirm("児童順に 2・2・3（G1,G2,G3）で自動割り当てしますか？")) return;
       autoAssignGroups223();
     };
   }
 }
-    
-    const autoBtn = document.getElementById("btnAutoGroup");
-    if(autoBtn){
-      autoBtn.onclick = ()=>{
-        if(!confirm("児童順に 2・2・3（G1,G2,G3）で自動割り当てしますか？")) return;
-        autoAssignGroups223();
-      };
-    }
+
+// ===== Photo: 1 per student (localStorage) =====
+function bindPhoto(){
+  const input = document.getElementById("photoInput");
+  const btnClear = document.getElementById("btnClearPhoto");
+  if(!input || !btnClear) return;
+
+  input.onchange = async ()=>{
+    const file = input.files && input.files[0];
+    if(!file) return;
+
+    const dataUrl = await readAsDataURL(file);
+    const resized = await resizeDataURL(dataUrl, 1280);
+
+    ensureStudent(state.currentStudent);
+    state.data.photosByStudent[state.currentStudent] = resized;
+    saveData();
+
+    renderPhotoPreview();
+    input.value = "";
+  };
+
+  btnClear.onclick = ()=>{
+    if(!confirm("この児童の画像を削除しますか？")) return;
+    ensureStudent(state.currentStudent);
+    state.data.photosByStudent[state.currentStudent] = "";
+    saveData();
+    renderPhotoPreview();
+  };
+}
+
+function renderPhotoPreview(){
+  const img = document.getElementById("photoPreview");
+  if(!img) return;
+
+  const url = (state.data.photosByStudent && state.data.photosByStudent[state.currentStudent]) || "";
+  if(url){
+    img.src = url;
+    img.style.display = "block";
+  }else{
+    img.removeAttribute("src");
+    img.style.display = "none";
   }
+}
 
-  // ===== Photo: 1 per student (localStorage) =====
-  function bindPhoto(){
-    const input = document.getElementById("photoInput");
-    const btnClear = document.getElementById("btnClearPhoto");
-    if(!input || !btnClear) return;
+function readAsDataURL(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(String(r.result || ""));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
 
-    input.onchange = async ()=>{
-      const file = input.files && input.files[0];
-      if(!file) return;
+function resizeDataURL(dataUrl, maxW){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const scale = Math.min(1, maxW / img.width);
+      const nw = Math.round(img.width * scale);
+      const nh = Math.round(img.height * scale);
 
-      const dataUrl = await readAsDataURL(file);
-      const resized = await resizeDataURL(dataUrl, 1280);
+      const canvas = document.createElement("canvas");
+      canvas.width = nw;
+      canvas.height = nh;
+      const ctx = canvas.getContext("2d");
+      if(ctx) ctx.drawImage(img, 0, 0, nw, nh);
 
-      ensureStudent(state.currentStudent);
-      state.data.photosByStudent[state.currentStudent] = resized;
-      saveData();
-
-      renderPhotoPreview();
-      input.value = "";
+      const out = canvas.toDataURL("image/jpeg", 0.82);
+      resolve(out);
     };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
 
-    btnClear.onclick = ()=>{
-      if(!confirm("この児童の画像を削除しますか？")) return;
-      ensureStudent(state.currentStudent);
-      state.data.photosByStudent[state.currentStudent] = "";
-      saveData();
-      renderPhotoPreview();
+// ===== Export / Import =====
+function exportData(){
+  try{
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: state.data
     };
-  }
+    const json = JSON.stringify(payload, null, 2);
 
-  function renderPhotoPreview(){
-    const img = document.getElementById("photoPreview");
-    if(!img) return;
-
-    const url = state.data.photosByStudent?.[state.currentStudent] || "";
-    if(url){
-      img.src = url;
-      img.style.display = "block";
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(json)
+        .then(()=> alert("エクスポートJSONをクリップボードにコピーしました。\n（メモ帳などに貼り付けて保存できます）"))
+        .catch(()=> fallbackDownload(json));
     }else{
-      img.removeAttribute("src");
-      img.style.display = "none";
+      fallbackDownload(json);
     }
+  }catch(e){
+    console.error(e);
+    alert("エクスポートに失敗しました。");
   }
+}
 
-  function readAsDataURL(file){
-    return new Promise((resolve, reject)=>{
-      const r = new FileReader();
-      r.onload = ()=> resolve(String(r.result || ""));
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
-  }
+function fallbackDownload(text){
+  const blob = new Blob([text], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "rika4_hyouka_export.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  alert("JSONファイルをダウンロードしました。");
+}
 
-  // 画像縮小（容量節約）
-  function resizeDataURL(dataUrl, maxW){
-    return new Promise((resolve)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const scale = Math.min(1, maxW / img.width);
-        const nw = Math.round(img.width * scale);
-        const nh = Math.round(img.height * scale);
-
-        const canvas = document.createElement("canvas");
-        canvas.width = nw;
-        canvas.height = nh;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, nw, nh);
-
-        const out = canvas.toDataURL("image/jpeg", 0.82);
-        resolve(out);
-      };
-      img.onerror = ()=> resolve(dataUrl);
-      img.src = dataUrl;
-    });
-  }
-    // ===== Export / Import =====
-  function exportData(){
-    try{
-      const payload = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        data: state.data
-      };
-      const json = JSON.stringify(payload, null, 2);
-
-      // まずはクリップボードにコピー（iPadで便利）
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(json)
-          .then(()=> alert("エクスポートJSONをクリップボードにコピーしました。\n（メモ帳などに貼り付けて保存できます）"))
-          .catch(()=> fallbackDownload(json));
-      }else{
-        fallbackDownload(json);
-      }
-    }catch(e){
-      console.error(e);
-      alert("エクスポートに失敗しました。");
-    }
-  }
-
-  function fallbackDownload(text){
-    // 端末にファイル保存（対応ブラウザ用）
-    const blob = new Blob([text], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "rika4_hyouka_export.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    alert("JSONファイルをダウンロードしました。");
-  }
-
-  async function importData(){
-    const msg =
+async function importData(){
+  const msg =
 `インポート方法を選んでください：
 1) クリップボードから貼り付け（推奨）
 2) ファイル選択（JSON）
 
 OK → 1) 貼り付け
 キャンセル → 2) ファイル選択`;
-    if(confirm(msg)){
-      // 1) クリップボードから貼り付け
-      const pasted = prompt("エクスポートJSONを貼り付けてください");
-      if(pasted == null) return;
-      doImportFromText(pasted);
-    }else{
-      // 2) ファイル選択
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "application/json";
-      input.onchange = async ()=>{
-        const file = input.files && input.files[0];
-        if(!file) return;
-        const text = await file.text();
-        doImportFromText(text);
-      };
-      input.click();
-    }
+  if(confirm(msg)){
+    const pasted = prompt("エクスポートJSONを貼り付けてください");
+    if(pasted == null) return;
+    doImportFromText(pasted);
+  }else{
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = async ()=>{
+      const file = input.files && input.files[0];
+      if(!file) return;
+      const text = await file.text();
+      doImportFromText(text);
+    };
+    input.click();
   }
+}
 
-  function doImportFromText(text){
-    try{
-      const obj = JSON.parse(text);
-      const d = obj && obj.data ? obj.data : obj; // payload形式でも生データでもOK
+function doImportFromText(text){
+  try{
+    const obj = JSON.parse(text);
+    const d = (obj && obj.data) ? obj.data : obj;
 
-      // 最低限の形チェック＆補正
-      if(!d || typeof d !== "object") throw new Error("invalid");
-      if(!Array.isArray(d.students) || d.students.length === 0) throw new Error("students");
+    if(!d || typeof d !== "object") throw new Error("invalid");
+    if(!Array.isArray(d.students) || d.students.length === 0) throw new Error("students");
 
-      // いったん state.data を置き換え
-      state.data = {
-        students: Array.isArray(d.students) ? d.students.slice() : safeClone(defaultData.students),
-        studentGroup: (d.studentGroup && typeof d.studentGroup === "object") ? d.studentGroup : {},
-        photosByStudent: (d.photosByStudent && typeof d.photosByStudent === "object") ? d.photosByStudent : {},
-        progressByStudent: (d.progressByStudent && typeof d.progressByStudent === "object") ? d.progressByStudent : {},
-        noteByStudent: (d.noteByStudent && typeof d.noteByStudent === "object") ? d.noteByStudent : {}
-      };
+    state.data = {
+      students: Array.isArray(d.students) ? d.students.slice() : safeClone(defaultData.students),
+      studentGroup: (d.studentGroup && typeof d.studentGroup === "object") ? d.studentGroup : {},
+      photosByStudent: (d.photosByStudent && typeof d.photosByStudent === "object") ? d.photosByStudent : {},
+      progressByStudent: (d.progressByStudent && typeof d.progressByStudent === "object") ? d.progressByStudent : {},
+      noteByStudent: (d.noteByStudent && typeof d.noteByStudent === "object") ? d.noteByStudent : {},
+      stepsByStudent: (d.stepsByStudent && typeof d.stepsByStudent === "object") ? d.stepsByStudent : {}
+    };
 
-      // 各児童の不足データ補完
-      state.data.students.forEach(n=> ensureStudent(n));
-
-      // 現在選択を先頭に
-      state.currentStudent = state.data.students[0];
-
-      saveData();
-      renderStudentSelect();
-      renderGroupUI();
-      renderSyncToggle();
-      renderSyncInfo();
-      renderInputs();
-
-      alert("インポート完了！");
-    }catch(e){
-      console.error(e);
-      alert("インポートに失敗しました。\nJSON形式が正しいか確認してください。");
-    }
-  }
-
-  // ===== Reset =====
-  function resetAll(){
-    if(!confirm("本当に全データを削除しますか？\n（名簿・画像・進捗・メモがすべて消えます）")) return;
-
-    localStorage.removeItem(DATA_KEY);
-
-    // 同期設定は残す/消すどちらでもいいが、ここでは残す（好みで変更OK）
-    // localStorage.removeItem(SYNC_KEY);
-
-    state.data = safeClone(defaultData);
+    state.data.students.forEach(n=> ensureStudent(n));
     state.currentStudent = state.data.students[0];
 
     saveData();
@@ -908,46 +844,66 @@ OK → 1) 貼り付け
     renderSyncToggle();
     renderSyncInfo();
     renderInputs();
-
-    alert("全データを削除しました。");
-  }
-
-  // ===== Init =====
-  document.addEventListener("DOMContentLoaded", ()=>{
-    // theme
-    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
-    const tbtn = document.getElementById("btnTheme");
-    if(tbtn) tbtn.addEventListener("click", toggleTheme);
-
-    // load state
-    state.data = loadData();
-    state.currentStudent = state.data.students[0];
-    state.data.students.forEach(n=> ensureStudent(n));
-
-    // initial render
-    renderStudentSelect();
-    renderGroupUI();
-    renderSyncToggle();
-    renderSyncInfo();
-    renderInputs();
     renderSteps();
 
-    // bind
-    bindInputs();
-    bindRosterButtons();
-    bindPhoto();
-    bindSteps();
+    alert("インポート完了！");
+  }catch(e){
+    console.error(e);
+    alert("インポートに失敗しました。\nJSON形式が正しいか確認してください。");
+  }
+}
 
-    // export/import/reset
-    const exBtn = document.getElementById("btnExport");
-    if(exBtn) exBtn.onclick = exportData;
+// ===== Reset =====
+function resetAll(){
+  if(!confirm("本当に全データを削除しますか？\n（名簿・画像・進捗・メモがすべて消えます）")) return;
 
-    const imBtn = document.getElementById("btnImport");
-    if(imBtn) imBtn.onclick = importData;
+  localStorage.removeItem(DATA_KEY);
 
-    const rsBtn = document.getElementById("btnReset");
-    if(rsBtn) rsBtn.onclick = resetAll;
-  });
+  state.data = safeClone(defaultData);
+  state.currentStudent = state.data.students[0];
+
+  saveData();
+  renderStudentSelect();
+  renderGroupUI();
+  renderSyncToggle();
+  renderSyncInfo();
+  renderInputs();
+  renderSteps();
+
+  alert("全データを削除しました。");
+}
+
+// ===== Init =====
+document.addEventListener("DOMContentLoaded", ()=>{
+  applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+  const tbtn = document.getElementById("btnTheme");
+  if(tbtn) tbtn.addEventListener("click", toggleTheme);
+
+  state.data = loadData();
+  state.currentStudent = state.data.students[0];
+  state.data.students.forEach(n=> ensureStudent(n));
+
+  renderStudentSelect();
+  renderGroupUI();
+  renderSyncToggle();
+  renderSyncInfo();
+  renderInputs();
+  renderSteps();
+
+  bindInputs();
+  bindRosterButtons();
+  bindPhoto();
+  bindSteps();
+
+  const exBtn = document.getElementById("btnExport");
+  if(exBtn) exBtn.onclick = exportData;
+
+  const imBtn = document.getElementById("btnImport");
+  if(imBtn) imBtn.onclick = importData;
+
+  const rsBtn = document.getElementById("btnReset");
+  if(rsBtn) rsBtn.onclick = resetAll;
+});
 </script>
 </body>
 </html>
