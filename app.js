@@ -274,6 +274,60 @@ function setView(mode){
   }
 }
 
+function renderAssignPhotoGrid(student, assignId){
+  const grid = document.getElementById("personalAssignPhotoGrid");
+  if(!grid) return;
+
+  ensureStudent(student);
+  const obj = state.data.assignStatusByStudent[student][assignId];
+  const photos = obj.photos || ["","",""];
+
+  grid.innerHTML = "";
+
+  for(let i=0;i<3;i++){
+    const cell = document.createElement("div");
+    cell.className = "card";
+    cell.style.padding = "8px";
+
+    const img = document.createElement("img");
+    img.style.width = "100%";
+    img.style.height = "120px";
+    img.style.objectFit = "contain";
+    img.style.border = "1px solid var(--line)";
+    img.style.borderRadius = "10px";
+    img.style.display = photos[i] ? "block" : "none";
+    if(photos[i]) img.src = photos[i];
+
+    const row = document.createElement("div");
+    row.className = "row";
+    row.style.marginTop = "8px";
+    row.style.justifyContent = "space-between";
+    row.style.alignItems = "center";
+
+    const label = document.createElement("div");
+    label.className = "small";
+    label.textContent = `写真${i+1}`;
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "btn";
+    del.textContent = "削除";
+    del.onclick = ()=>{
+      ensureStudent(student);
+      state.data.assignStatusByStudent[student][assignId].photos[i] = "";
+      saveData();
+      renderAssignPhotoGrid(student, assignId);
+    };
+
+    row.appendChild(label);
+    row.appendChild(del);
+
+    cell.appendChild(img);
+    cell.appendChild(row);
+    grid.appendChild(cell);
+  }
+}
+
 /* ====================================================
    Step B：個人ビュー 提出物（提出：済/未）
 ==================================================== */
@@ -366,6 +420,18 @@ function renderPersonalAssignments(){
   const st = state.data.assignStatusByStudent?.[student]?.[assignId];
   const submitted = !!(st && st.submitted);
 
+   // 追加：メモ
+const memoEl = document.getElementById("personalAssignMemo");
+if(memoEl){
+  const memo = (st && typeof st.memo === "string") ? st.memo : "";
+  memoEl.value = memo;
+
+  memoEl.oninput = ()=>{
+    ensureStudent(student);
+    state.data.assignStatusByStudent[student][assignId].memo = memoEl.value;
+    saveData();
+  };
+}
   badge.textContent = submitted ? "提出：済" : "提出：未";
   statusText.textContent = `提出物「${getAssignTitle(assignId)}」：${submitted ? "提出済み" : "未提出"}`;
 
@@ -388,6 +454,49 @@ function renderPersonalAssignments(){
       renderOverviewAssignments();
     }
   };
+   // 追加：写真
+const photoInput = document.getElementById("personalAssignPhotoInput");
+const clearPhotosBtn = document.getElementById("btnClearAssignPhotos");
+
+if(photoInput){
+  photoInput.onchange = async ()=>{
+    const file = photoInput.files && photoInput.files[0];
+    if(!file) return;
+
+    ensureStudent(student);
+    const obj = state.data.assignStatusByStudent[student][assignId];
+
+    const idx = (obj.photos || ["","",""]).findIndex(x => !x);
+    if(idx === -1){
+      alert("写真は最大3枚までです。削除してから追加してください。");
+      photoInput.value = "";
+      return;
+    }
+
+    // ★ここが既存関数に依存
+    const dataUrl = await readAsDataURL(file);
+    const resized = await resizeDataURL(dataUrl, 1280);
+
+    obj.photos[idx] = resized;
+
+    saveData();
+    renderAssignPhotoGrid(student, assignId);
+    photoInput.value = "";
+  };
+}
+
+if(clearPhotosBtn){
+  clearPhotosBtn.onclick = ()=>{
+    if(!confirm("この提出物の写真をすべて削除しますか？")) return;
+    ensureStudent(student);
+    state.data.assignStatusByStudent[student][assignId].photos = ["","",""];
+    saveData();
+    renderAssignPhotoGrid(student, assignId);
+  };
+}
+
+// 最後に描画
+renderAssignPhotoGrid(student, assignId);
 }
 
 
