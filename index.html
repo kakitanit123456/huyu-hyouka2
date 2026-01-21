@@ -511,23 +511,22 @@ if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[
 
     renderPhotoPreview();
   }
-
-  function bindInputs(){
+function bindInputs(){
   const planEl = document.getElementById("planInput");
   const statusEl = document.getElementById("statusSelect");
   const noteEl = document.getElementById("noteInput");
   const toggle = document.getElementById("syncToggle");
 
-  const isSyncEnabled = ()=> (toggle && toggle.checked) || (localStorage.getItem(SYNC_KEY) === "1");
+  const isSyncEnabled = ()=> 
+    (toggle && toggle.checked) || (localStorage.getItem(SYNC_KEY) === "1");
 
   const saveAndMaybeSync = ()=>{
     saveData();
     if(isSyncEnabled()){
-      // グループ未設定なら自分だけなので結果的に同期なし
       syncProgressToGroup(state.currentStudent);
     }
     renderSyncInfo();
-    renderInputs(); // 同期した結果を即反映
+    renderInputs();
   };
 
   if(planEl){
@@ -547,11 +546,10 @@ if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[
   }
 
   if(noteEl){
-    // note は個人（同期しない）
     noteEl.oninput = ()=>{
       ensureStudent(state.currentStudent);
       state.data.noteByStudent[state.currentStudent] = noteEl.value;
-      saveData();
+      saveData(); // 個人なので同期しない
     };
   }
 }
