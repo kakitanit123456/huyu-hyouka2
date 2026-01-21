@@ -8,6 +8,21 @@
   <title>4年理科 評価記録ツール（冬プロ）</title>
 
   <style>
+    /* 12時間チェックの見た目 */
+.stepBtn{
+  background: var(--card2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 700;
+}
+.stepBtn.isDone{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #08121f; /* 明るい背景で文字が見えるように（固定色でOKなら） */
+}
+:root[data-theme="light"] .stepBtn.isDone{
+  color: #07121f;
+}
     :root{
       --bg:#0b0c10; --card:#12141a; --card2:#161a22; --text:#e8eef7; --muted:#a9b3c2;
       --line:#232a36; --chip:#1c2330; --btn:#1f2a3a; --accent:#59a8ff;
@@ -246,7 +261,7 @@
       </div>
 
       <img id="photoPreview" alt="" style="width:100%;max-height:320px;object-fit:contain;border:1px solid var(--line);border-radius:12px;display:none;margin-top:8px" />
-      <div class="small" style="margin-top:8px">※ Part2で保存（localStorage）を実装します</div>
+      <div class="small" style="margin-top:8px">※画像は端末内に保存されます（localStorage）。同期はしません。</div>
     </div>
 
     <div class="card" style="margin-top:12px">
@@ -568,11 +583,9 @@ function renderSteps(){
   for(let i=0;i<12;i++){
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn";
+    btn.className = "btn stepBtn" + (arr[i] ? " isDone" : "");
     btn.textContent = String(i+1);
     btn.dataset.stepIndex = String(i);
-
-    btn.style.borderColor = arr[i] ? "var(--accent)" : "var(--line)";
     wrap.appendChild(btn);
   }
 
