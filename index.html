@@ -198,30 +198,33 @@
 
 <!-- ★ 個人ビュー（今までの中身を全部ここに入れる） -->
 <div id="viewPersonal">
-  <!-- ここに今の「計画〜提出物〜12時間チェック」のカード群が入る想定 -->
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:700">計画（plan）／進捗（status）</div>
+      <span class="badge">同期対象</span>
+    </div>
+
+    <!-- ★ 12時間 進捗チェック（個人） -->
+    <div class="card" style="margin-top:12px">
+      （中身そのまま）
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    （提出物・画像の中身そのまま）
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    （この段階の確認 そのまま）
+  </div>
+
 </div>
 
 <!-- ★ 一覧ビュー（最初は非表示） -->
 <div id="viewOverview" style="display:none">
-  <div class="card">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div style="font-size:14px;font-weight:700">12時間チェック 一覧</div>
-      <span class="badge" id="overviewHint">タップで児童を切替</span>
-    </div>
-    <div class="small" style="margin-top:8px">
-      ※ 行をクリックすると、その児童に切り替わって「個人」画面に戻ります
-    </div>
-
-    <div id="overviewTable" style="margin-top:10px"></div>
-  </div>
+  （一覧の中身そのまま）
 </div>
-
-    
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div style="font-size:14px;font-weight:700">計画（plan）／進捗（status）</div>
-        <span class="badge">同期対象</span>
-      </div>
 
     <!-- ★ 12時間 進捗チェック（個人） -->
     <div class="card" style="margin-top:12px">
@@ -509,6 +512,8 @@ function ensureStudent(name){
   if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[name].length !== 12){
     state.data.stepsByStudent[name] = Array.from({length:12}, ()=> false);
   }
+  if(!state.data.progressByStudent) state.data.progressByStudent = {};
+if(!state.data.progressByStudent[name]) state.data.progressByStudent[name] = { plan:"", status:"" };
 }
 
 function getGroupMembers(studentName){
@@ -1105,6 +1110,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindStepEditor();
 
   bindViewButtons(); // ★これを追加
+  setView("personal"); // ★初期表示を確定
 
   const exBtn = document.getElementById("btnExport");
   if(exBtn) exBtn.onclick = exportData;
