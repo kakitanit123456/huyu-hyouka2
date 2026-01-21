@@ -1549,7 +1549,13 @@ renderPersonalAssignments();
 if(document.getElementById("sideDrawer")){
   renderSideOverview(true);
 }
-
+function bindViewButtons(){
+  const bP = document.getElementById("btnViewPersonal");
+  const bO = document.getElementById("btnViewOverview");
+  if(bP) bP.onclick = ()=> setView("personal");
+  if(bO) bO.onclick = ()=> setView("overview");
+}
+   
 /* ====================================================
    17) Init（起動）
 ==================================================== */
