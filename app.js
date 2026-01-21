@@ -356,6 +356,7 @@ function renderAssignPhotoGrid(student, assignId){
       ensureStudent(student);
       state.data.assignStatusByStudent[student][assignId].photos[i] = "";
       saveData();
+      renderSideOverview();
       renderAssignPhotoGrid(student, assignId);
     };
 
@@ -522,6 +523,7 @@ if(photoInput){
     obj.photos[idx] = resized;
 
     saveData();
+    renderSideOverview();
     renderAssignPhotoGrid(student, assignId);
     photoInput.value = "";
   };
@@ -533,6 +535,7 @@ if(clearPhotosBtn){
     ensureStudent(student);
     state.data.assignStatusByStudent[student][assignId].photos = ["","",""];
     saveData();
+    renderSideOverview();
     renderAssignPhotoGrid(student, assignId);
   };
 }
@@ -736,8 +739,7 @@ function bindSteps(){
 
     saveData();
     renderSteps(); // 再描画で色とカウントが更新される
-   renderSteps(); // 既存
-renderSideOverview(); // ★追加（サイド一覧も更新）
+    renderSideOverview(); // ★追加（サイド一覧も更新）
   });
 
   // 全解除
@@ -1143,10 +1145,7 @@ function renderOverviewAssignments(){
   table.appendChild(wrap);
 }
 
-function renderSideOverview(){
-  renderSideOverviewSteps();
-  renderSideOverviewAssignments();
-}
+renderSideOverview()
 
 function renderSideOverviewSteps(){
   const host = document.getElementById("sideOverviewSteps");
@@ -1388,6 +1387,8 @@ function bindRosterButtons(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
+      renderPersonalAssignments(); // ★追加（今の児童に合わせて提出UIを再構築）
+      renderSideOverview();        // ★追加（ドロワー開いてたら追従）
     };
   }
 
