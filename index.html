@@ -190,122 +190,111 @@
       <h2>記録</h2>
       <span class="hint">提出物・画像は個人（同期しない）</span>
     </div>
-<!-- ★ 画面切り替え（個人 / 一覧） -->
-<div class="row" style="margin-bottom:10px">
-  <button class="btn primary" id="btnViewPersonal" type="button">個人</button>
-  <button class="btn" id="btnViewOverview" type="button">一覧</button>
-</div>
 
-<!-- ★ 個人ビュー（今までの中身を全部ここに入れる） -->
-<div id="viewPersonal">
-
-  <div class="card">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div style="font-size:14px;font-weight:700">計画（plan）／進捗（status）</div>
-      <span class="badge">同期対象</span>
+    <!-- 画面切り替え（個人 / 一覧） -->
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn primary" id="btnViewPersonal" type="button">個人</button>
+      <button class="btn" id="btnViewOverview" type="button">一覧</button>
     </div>
 
-    <!-- ★ 12時間 進捗チェック（個人） -->
-    <div class="card" style="margin-top:12px">
-      （中身そのまま）
+    <!-- 個人ビュー -->
+    <div id="viewPersonal">
+      <!-- 12時間 進捗チェック（個人） -->
+      <div class="card" style="margin-top:12px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div style="font-size:14px;font-weight:700">12時間 進捗チェック</div>
+          <span class="badge" id="stepCount">0/12</span>
+          <button class="btn" id="btnEditSteps" type="button">内容編集</button>
+        </div>
+
+        <div class="small" style="margin-top:8px">
+          ※このチェックは「個人管理」（グループ同期しない）
+        </div>
+
+        <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px"></div>
+
+        <!-- 12時間ラベル編集パネル -->
+        <div class="card" id="stepEditor" style="display:none; margin-top:12px">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div style="font-size:14px;font-weight:700">12時間の内容編集</div>
+            <button class="btn" id="btnCloseStepEditor" type="button">閉じる</button>
+          </div>
+
+          <div class="sub" style="margin-top:10px">適用先</div>
+          <select id="stepApplyScope">
+            <option value="current">この児童だけ</option>
+            <option value="group">同じグループ</option>
+            <option value="all">全員</option>
+            <option value="selected">選択した児童だけ</option>
+          </select>
+
+          <div id="selectedStudentsBox" style="display:none; margin-top:10px">
+            <div class="sub">適用する児童を選択</div>
+            <div id="selectedStudentsList" style="display:grid; gap:8px; margin-top:8px"></div>
+          </div>
+
+          <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
+            <button class="btn" id="btnLoadGlobalLabels" type="button">共通テンプレを読み込み</button>
+            <button class="btn" id="btnSaveGlobalLabels" type="button">共通テンプレとして保存</button>
+            <button class="btn primary" id="btnSaveStepLabels" type="button">保存して適用</button>
+          </div>
+
+          <div class="sub" style="margin-top:12px">12個の内容</div>
+          <div id="stepLabelInputs" style="display:grid; gap:8px; margin-top:8px"></div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
+        </div>
+      </div>
+
+      <!-- 提出物・画像（個人） -->
+      <div class="card" style="margin-top:12px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div style="font-size:14px;font-weight:700">提出物・画像（個人）</div>
+          <span class="badge">同期しない</span>
+        </div>
+
+        <div class="sub" style="margin-top:10px">提出物メモ（個人）</div>
+        <textarea id="noteInput" placeholder="例：提出済み、再提出、写真OK など（個人メモ）"></textarea>
+
+        <div class="sub" style="margin-top:10px">画像（個人・1枚）</div>
+        <div class="row">
+          <input id="photoInput" type="file" accept="image/*" />
+          <button class="btn" id="btnClearPhoto" type="button">画像を削除</button>
+        </div>
+
+        <img id="photoPreview" alt=""
+          style="width:100%;max-height:320px;object-fit:contain;border:1px solid var(--line);border-radius:12px;display:none;margin-top:8px" />
+        <div class="small" style="margin-top:8px">※画像は端末内に保存されます（localStorage）。同期はしません。</div>
+      </div>
+
+      <!-- 確認 -->
+      <div class="card" style="margin-top:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px">この段階の確認</div>
+        <ul style="margin:0; padding-left:18px; color:var(--muted); line-height:1.7; font-size:13px">
+          <li>右上の🌙/☀️でライト/ダークが切り替わる</li>
+          <li>iPad横でも右上ボタンが押せる（headerがかぶらない）</li>
+          <li>コンソールにエラーが出ない</li>
+        </ul>
+      </div>
     </div>
+
+    <!-- 一覧ビュー -->
+    <div id="viewOverview" style="display:none">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div style="font-size:14px;font-weight:700">12時間チェック 一覧</div>
+          <span class="badge" id="overviewHint">タップで児童を切替</span>
+        </div>
+        <div class="small" style="margin-top:8px">
+          ※ 行をクリックすると、その児童に切り替わって「個人」画面に戻ります
+        </div>
+        <div id="overviewTable" style="margin-top:10px"></div>
+      </div>
+    </div>
+
   </div>
-
-  <div class="card" style="margin-top:12px">
-    （提出物・画像の中身そのまま）
-  </div>
-
-  <div class="card" style="margin-top:12px">
-    （この段階の確認 そのまま）
-  </div>
-
-</div>
-
-<!-- ★ 一覧ビュー（最初は非表示） -->
-<div id="viewOverview" style="display:none">
-  （一覧の中身そのまま）
-</div>
-
-    <!-- ★ 12時間 進捗チェック（個人） -->
-    <div class="card" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div style="font-size:14px;font-weight:700">12時間 進捗チェック</div>
-        <span class="badge" id="stepCount">0/12</span>
-        <button class="btn" id="btnEditSteps" type="button">内容編集</button>
-      </div>
-
-      <div class="small" style="margin-top:8px">
-        ※このチェックは「個人管理」（グループ同期しない）
-      </div>
-
-      <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px">
-        <!-- JSで 1〜12 を生成 -->
-      </div>
- <!-- ▼ 12時間ラベル編集パネル（最初は非表示） -->
- <div class="card" id="stepEditor" style="display:none; margin-top:12px">
-   <div class="row" style="justify-content:space-between;align-items:center">
-     <div style="font-size:14px;font-weight:700">12時間の内容編集</div>
-     <button class="btn" id="btnCloseStepEditor" type="button">閉じる</button>
-   </div>
-
-   <div class="sub" style="margin-top:10px">適用先</div>
-   <select id="stepApplyScope">
-     <option value="current">この児童だけ</option>
-     <option value="group">同じグループ</option>
-     <option value="all">全員</option>
-     <option value="selected">選択した児童だけ</option>
-   </select>
-
-  <div id="selectedStudentsBox" style="display:none; margin-top:10px">
-    <div class="sub">適用する児童を選択</div>
-    <div id="selectedStudentsList" style="display:grid; gap:8px; margin-top:8px"></div>
-   </div>
-
-   <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
-  <button class="btn" id="btnLoadGlobalLabels" type="button">共通テンプレを読み込み</button>
-  <button class="btn" id="btnSaveGlobalLabels" type="button">共通テンプレとして保存</button> <!-- ★追加 -->
-  <button class="btn primary" id="btnSaveStepLabels" type="button">保存して適用</button>
-</div>
-
-   <div class="sub" style="margin-top:12px">12個の内容</div>
-   <div id="stepLabelInputs" style="display:grid; gap:8px; margin-top:8px"></div>
- </div>
- <!-- ▲ 編集パネルここまで -->
-      <div class="row" style="margin-top:10px">
-        <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
-      </div>
-    </div>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div style="font-size:14px;font-weight:700">提出物・画像（個人）</div>
-        <span class="badge">同期しない</span>
-      </div>
-
-      <div class="sub" style="margin-top:10px">提出物メモ（個人）</div>
-      <textarea id="noteInput" placeholder="例：提出済み、再提出、写真OK など（個人メモ）"></textarea>
-
-      <div class="sub" style="margin-top:10px">画像（個人・1枚）</div>
-      <div class="row">
-        <input id="photoInput" type="file" accept="image/*" />
-        <button class="btn" id="btnClearPhoto" type="button">画像を削除</button>
-      </div>
-
-      <img id="photoPreview" alt="" style="width:100%;max-height:320px;object-fit:contain;border:1px solid var(--line);border-radius:12px;display:none;margin-top:8px" />
-      <div class="small" style="margin-top:8px">※画像は端末内に保存されます（localStorage）。同期はしません。</div>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <div style="font-size:14px;font-weight:700;margin-bottom:6px">この段階の確認</div>
-      <ul style="margin:0; padding-left:18px; color:var(--muted); line-height:1.7; font-size:13px">
-        <li>右上の🌙/☀️でライト/ダークが切り替わる</li>
-        <li>iPad横でも右上ボタンが押せる（headerがかぶらない）</li>
-        <li>コンソールにエラーが出ない</li>
-      </ul>
-    </div>
-  </div>
-</div>
 
 <script>
 /**********************
@@ -543,10 +532,30 @@ function renderStudentSelect(){
     state.currentStudent = sel.value;
     renderGroupUI();
     renderSteps();
+    renderPhotoPreview();   // ★追加
+    renderNote();           // ★追加
     saveData();
   };
 }
 
+function renderNote(){
+  const ta = document.getElementById("noteInput");
+  if(!ta) return;
+  ensureStudent(state.currentStudent);
+  ta.value = (state.data.noteByStudent && state.data.noteByStudent[state.currentStudent]) || "";
+}
+
+function bindNote(){
+  const ta = document.getElementById("noteInput");
+  if(!ta) return;
+
+  ta.addEventListener("input", ()=>{
+    ensureStudent(state.currentStudent);
+    state.data.noteByStudent[state.currentStudent] = ta.value;
+    saveData();
+  });
+}
+  
 // ===== UI: group =====
 function renderGroupUI(){
   const sel = document.getElementById("groupSelect");
@@ -1104,11 +1113,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderStudentSelect();
   renderGroupUI();
   renderSteps();
+  renderPhotoPreview(); // ★初期表示
+  renderNote();         // ★初期表示
+  
   bindRosterButtons();
   bindPhoto();
+  bindNote();           // ★追加
   bindSteps();
   bindStepEditor();
-
   bindViewButtons(); // ★これを追加
   setView("personal"); // ★初期表示を確定
 
