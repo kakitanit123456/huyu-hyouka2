@@ -228,7 +228,35 @@
       <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px">
         <!-- JSで 1〜12 を生成 -->
       </div>
+ <!-- ▼ 12時間ラベル編集パネル（最初は非表示） -->
+ <div class="card" id="stepEditor" style="display:none; margin-top:12px">
+   <div class="row" style="justify-content:space-between;align-items:center">
+     <div style="font-size:14px;font-weight:700">12時間の内容編集</div>
+     <button class="btn" id="btnCloseStepEditor" type="button">閉じる</button>
+   </div>
 
+   <div class="sub" style="margin-top:10px">適用先</div>
+   <select id="stepApplyScope">
+     <option value="current">この児童だけ</option>
+     <option value="group">同じグループ</option>
+     <option value="all">全員</option>
+     <option value="selected">選択した児童だけ</option>
+   </select>
+
+  <div id="selectedStudentsBox" style="display:none; margin-top:10px">
+    <div class="sub">適用する児童を選択</div>
+    <div id="selectedStudentsList" style="display:grid; gap:8px; margin-top:8px"></div>
+   </div>
+
+   <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
+     <button class="btn" id="btnLoadGlobalLabels" type="button">共通テンプレを読み込み</button>
+     <button class="btn primary" id="btnSaveStepLabels" type="button">保存して適用</button>
+   </div>
+
+   <div class="sub" style="margin-top:12px">12個の内容</div>
+   <div id="stepLabelInputs" style="display:grid; gap:8px; margin-top:8px"></div>
+ </div>
+ <!-- ▲ 編集パネルここまで -->
       <div class="row" style="margin-top:10px">
         <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
       </div>
@@ -304,19 +332,20 @@ function toggleTheme(){
 
 // ===== Data model =====
 const defaultData = {
-  students: ["（サンプル）児童A","（サンプル）児童B","（サンプル）児童C","（サンプル）児童D","（サンプル）児童E","（サンプル）児童F","（サンプル）児童G"],
+  students: [...],
   studentGroup: {},
   progressByStudent: {},
   noteByStudent: {},
   photosByStudent: {},
-  stepsByStudent: {}, // { name: [true..12] } 個人（同期しない）
+  stepsByStudent: {},
+
   stepLabelsGlobal: [
-  "調べる①","調べる②","調べる③",
-  "まとめる①","まとめる②","まとめる③",
-  "発表①","発表②","発表③",
-  "ふり返り①","ふり返り②","ふり返り③"
-],
-stepLabelsByStudent: {} // { name: ["...12個..."] } ← その児童だけ上書き
+    "調べる①","調べる②","調べる③",
+    "まとめる①","まとめる②","まとめる③",
+    "発表①","発表②","発表③",
+    "ふり返り①","ふり返り②","ふり返り③"
+  ],
+  stepLabelsByStudent: {}
 };
 
 function safeClone(obj){
@@ -340,7 +369,14 @@ function loadData(){
 if(!state.data.stepLabelsByStudent || typeof state.data.stepLabelsByStudent !== "object"){
   state.data.stepLabelsByStudent = {};
 }
-
+/* [ADD] stepラベル保存領域の補完（loadData内） */
+ // ★ 追加：stepラベルの保存領域を補完
+ if(!Array.isArray(d.stepLabelsGlobal) || d.stepLabelsGlobal.length !== 12){
+   d.stepLabelsGlobal = safeClone(defaultData.stepLabelsGlobal);
+ }
+ if(!d.stepLabelsByStudent || typeof d.stepLabelsByStudent !== "object"){
+   d.stepLabelsByStudent = {};
+ }
     // 児童ごとの不足を補完
     d.students.forEach(name=>{
       if(d.studentGroup[name] == null) d.studentGroup[name] = "";
@@ -767,19 +803,20 @@ function renderSteps(){
 
   wrap.innerHTML = "";
 
-  for(let i=0;i<12;i++){
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn";
-    btn.dataset.stepIndex = String(i);
+  const btn = document.createElement("button");
+btn.type = "button";
+btn.className = "btn stepBtn";          // ★ CSSを効かせる
+btn.dataset.stepIndex = String(i);
 
-    // 見た目：番号＋ラベル（小さめ）
-    btn.innerHTML = `
-      <div style="font-weight:700">${i+1}</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.2; margin-top:2px; overflow-wrap:anywhere">
-        ${labels[i] || ""}
-      </div>
-    `;
+btn.innerHTML = `
+   <div style="font-weight:700">${i+1}</div>
+   <div style="font-size:11px;color:var(--muted);line-height:1.2; margin-top:2px; overflow-wrap:anywhere">
+     ${labels[i] || ""}
+   </div>
+`;
+
+ if(arr[i]) btn.classList.add("isDone"); // ★ 完了の見た目
+ wrap.appendChild(btn);
 
     // ON/OFF 色
     if(arr[i]){
@@ -1049,7 +1086,9 @@ function doImportFromText(text){
       photosByStudent: (d.photosByStudent && typeof d.photosByStudent === "object") ? d.photosByStudent : {},
       progressByStudent: (d.progressByStudent && typeof d.progressByStudent === "object") ? d.progressByStudent : {},
       noteByStudent: (d.noteByStudent && typeof d.noteByStudent === "object") ? d.noteByStudent : {},
-      stepsByStudent: (d.stepsByStudent && typeof d.stepsByStudent === "object") ? d.stepsByStudent : {}
+      stepsByStudent: (d.stepsByStudent && typeof d.stepsByStudent === "object") ? d.stepsByStudent : {},
+      stepLabelsGlobal: Array.isArray(d.stepLabelsGlobal) ? d.stepLabelsGlobal : safeClone(defaultData.stepLabelsGlobal),
+stepLabelsByStudent: (d.stepLabelsByStudent && typeof d.stepLabelsByStudent === "object") ? d.stepLabelsByStudent : {},
     };
 
     state.data.students.forEach(n=> ensureStudent(n));
