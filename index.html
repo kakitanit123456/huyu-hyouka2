@@ -443,6 +443,62 @@ function bindViewButtons(){
   if(bO) bO.onclick = ()=> setView("overview");
 }
 
+function renderOverview(){
+  const host = document.getElementById("overviewTable");
+  if(!host) return;
+
+  // テーブルっぽい見た目（divで作る）
+  const wrap = document.createElement("div");
+  wrap.style.display = "grid";
+  wrap.style.gap = "8px";
+
+  state.data.students.forEach(name=>{
+    ensureStudent(name);
+    const arr = state.data.stepsByStudent[name] || [];
+    const done = arr.filter(Boolean).length;
+
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "btn";
+    row.style.textAlign = "left";
+    row.style.display = "grid";
+    row.style.gridTemplateColumns = "1fr auto";
+    row.style.alignItems = "center";
+    row.style.gap = "10px";
+    row.style.padding = "12px";
+
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <div style="font-weight:800">${name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">
+        ${done}/12 完了
+      </div>
+    `;
+
+    const right = document.createElement("div");
+    right.className = "badge";
+    right.textContent = `${done}/12`;
+
+    // 行クリックでその児童へ切替 → 個人へ戻る
+    row.onclick = ()=>{
+      state.currentStudent = name;
+      saveData();
+      renderStudentSelect();
+      renderGroupUI();
+      renderSteps();
+      // 提出物も後でここでrenderする
+      setView("personal");
+    };
+
+    row.appendChild(left);
+    row.appendChild(right);
+    wrap.appendChild(row);
+  });
+
+  host.innerHTML = "";
+  host.appendChild(wrap);
+}
+  
   
 // ===== Helpers =====
 function ensureStudent(name){
@@ -1047,6 +1103,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindPhoto();
   bindSteps();
   bindStepEditor();
+
+  bindViewButtons(); // ★これを追加
 
   const exBtn = document.getElementById("btnExport");
   if(exBtn) exBtn.onclick = exportData;
