@@ -113,28 +113,29 @@
     <button class="btn" id="btnPersonalNextAssign" type="button">→</button>
   </div>
 
-  <div class="small" id="personalAssignStatusText" style="margin-top:10px">
-    ---
-  </div>
+    <div class="small" id="personalAssignStatusText" style="margin-top:10px">---</div>
 
+  <!-- ボタン行だけ -->
   <div class="row" style="margin-top:10px">
     <button class="btn primary" id="btnToggleSubmitted" type="button">提出：未 → 済にする</button>
-    <div class="sub" style="margin-top:12px">提出メモ（提出物ごと）</div>
-<textarea id="personalAssignMemo" placeholder="例：再提出あり／写真OK／期限○日 など"></textarea>
+  </div>
 
-<div class="sub" style="margin-top:12px">写真（提出物ごと・最大3枚）</div>
+  <!-- メモ -->
+  <div class="sub" style="margin-top:12px">提出メモ（提出物ごと）</div>
+  <textarea id="personalAssignMemo" placeholder="例：再提出あり／写真OK／期限○日 など"></textarea>
 
-<div class="row">
-  <input id="personalAssignPhotoInput" type="file" accept="image/*" />
-  <span class="small">※1枚ずつ追加（最大3枚）</span>
-</div>
+  <!-- 写真 -->
+  <div class="sub" style="margin-top:12px">写真（提出物ごと・最大3枚）</div>
 
-<div id="personalAssignPhotoGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
+  <div class="row">
+    <input id="personalAssignPhotoInput" type="file" accept="image/*" />
+    <span class="small">※1枚ずつ追加（最大3枚）</span>
+  </div>
 
-<div class="row" style="margin-top:8px">
-    <button class="btn" id="btnClearAssignPhotos" type="button">
-      この提出物の写真を全部削除
-    </button>
+  <div id="personalAssignPhotoGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
+
+  <div class="row" style="margin-top:8px">
+    <button class="btn" id="btnClearAssignPhotos" type="button">この提出物の写真を全部削除</button>
   </div>
   </div>
 </div>
