@@ -310,6 +310,13 @@ const defaultData = {
   noteByStudent: {},
   photosByStudent: {},
   stepsByStudent: {} // { name: [true..12] } 個人（同期しない）
+  stepLabelsGlobal: [
+  "調べる①","調べる②","調べる③",
+  "まとめる①","まとめる②","まとめる③",
+  "発表①","発表②","発表③",
+  "ふり返り①","ふり返り②","ふり返り③"
+],
+stepLabelsByStudent: {} // { name: ["...12個..."] } ← その児童だけ上書き
 };
 
 function safeClone(obj){
@@ -327,6 +334,12 @@ function loadData(){
     if(!d.noteByStudent || typeof d.noteByStudent !== "object") d.noteByStudent = {};
     if(!d.photosByStudent || typeof d.photosByStudent !== "object") d.photosByStudent = {};
     if(!d.stepsByStudent || typeof d.stepsByStudent !== "object") d.stepsByStudent = {};
+    if(!state.data.stepLabelsGlobal || !Array.isArray(state.data.stepLabelsGlobal) || state.data.stepLabelsGlobal.length !== 12){
+  state.data.stepLabelsGlobal = safeClone(defaultData.stepLabelsGlobal);
+}
+if(!state.data.stepLabelsByStudent || typeof state.data.stepLabelsByStudent !== "object"){
+  state.data.stepLabelsByStudent = {};
+}
 
     // 児童ごとの不足を補完
     d.students.forEach(name=>{
@@ -571,22 +584,212 @@ function updateStepCount(){
   const done = arr.filter(Boolean).length;
   badge.textContent = `${done}/12`;
 }
+function getStepLabelsFor(studentName){
+  // 児童の上書きがあればそれを、なければ共通テンプレを返す
+  const per = state.data.stepLabelsByStudent && state.data.stepLabelsByStudent[studentName];
+  if(Array.isArray(per) && per.length === 12) return per;
+  return state.data.stepLabelsGlobal || safeClone(defaultData.stepLabelsGlobal);
+}
 
+function renderStepLabelInputs(labels){
+  const box = document.getElementById("stepLabelInputs");
+  if(!box) return;
+  box.innerHTML = "";
+
+  for(let i=0;i<12;i++){
+    const wrap = document.createElement("div");
+    wrap.className = "card";
+    wrap.style.padding = "10px";
+
+    const t = document.createElement("div");
+    t.className = "sub";
+    t.textContent = `${i+1}番`;
+
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.value = labels[i] || "";
+    inp.dataset.idx = String(i);
+
+    wrap.appendChild(t);
+    wrap.appendChild(inp);
+    box.appendChild(wrap);
+  }
+}
+
+function readStepLabelInputs(){
+  const box = document.getElementById("stepLabelInputs");
+  const inputs = box ? Array.from(box.querySelectorAll("input")) : [];
+  const arr = Array.from({length:12}, ()=> "");
+
+  inputs.forEach(inp=>{
+    const idx = Number(inp.dataset.idx);
+    if(!Number.isNaN(idx) && idx>=0 && idx<12){
+      arr[idx] = (inp.value || "").trim();
+    }
+  });
+
+  // 空欄でもOKだが、完全空白は見づらいので番号だけ入れる保険（好みで消してOK）
+  for(let i=0;i<12;i++){
+    if(!arr[i]) arr[i] = `${i+1}`;
+  }
+  return arr;
+}
+
+function getTargetsByScope(scope){
+  if(scope === "all"){
+    return state.data.students.slice();
+  }
+  if(scope === "group"){
+    return getGroupMembers(state.currentStudent);
+  }
+  if(scope === "selected"){
+    const list = document.getElementById("selectedStudentsList");
+    if(!list) return [state.currentStudent];
+    const checks = Array.from(list.querySelectorAll("input[type=checkbox]"));
+    const names = checks.filter(c=>c.checked).map(c=>c.value);
+    return (names.length ? names : [state.currentStudent]);
+  }
+  // current
+  return [state.currentStudent];
+}
+
+function applyStepLabelsToTargets(labels, targetNames){
+  // targetNamesの子に「上書き」を保存する（共通テンプレは触らない）
+  if(!state.data.stepLabelsByStudent) state.data.stepLabelsByStudent = {};
+  targetNames.forEach(n=>{
+    state.data.stepLabelsByStudent[n] = labels.slice();
+  });
+  saveData();
+}
+
+function openStepEditor(){
+  const panel = document.getElementById("stepEditor");
+  if(!panel) return;
+
+  panel.style.display = "block";
+
+  // 現在の児童のラベルを読み込んで入力欄に反映
+  const labels = getStepLabelsFor(state.currentStudent);
+  renderStepLabelInputs(labels);
+
+  // 選択適用リスト描画
+  renderSelectedStudentsList();
+
+  // 適用先がselectedのときだけチェックリスト表示
+  const scopeSel = document.getElementById("stepApplyScope");
+  const box = document.getElementById("selectedStudentsBox");
+  if(scopeSel && box){
+    box.style.display = (scopeSel.value === "selected") ? "block" : "none";
+  }
+}
+
+function closeStepEditor(){
+  const panel = document.getElementById("stepEditor");
+  if(panel) panel.style.display = "none";
+}
+
+function renderSelectedStudentsList(){
+  const list = document.getElementById("selectedStudentsList");
+  if(!list) return;
+
+  list.innerHTML = "";
+  state.data.students.forEach(name=>{
+    const label = document.createElement("label");
+    label.className = "pill";
+    label.style.justifyContent = "space-between";
+
+    const span = document.createElement("span");
+    span.textContent = name;
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = name;
+    cb.style.width = "auto";
+
+    // 初期：現在の児童はONにしておく
+    if(name === state.currentStudent) cb.checked = true;
+
+    label.appendChild(span);
+    label.appendChild(cb);
+    list.appendChild(label);
+  });
+}
+
+function bindStepEditor(){
+  const btn = document.getElementById("btnEditSteps");
+  const btnClose = document.getElementById("btnCloseStepEditor");
+  const btnSave = document.getElementById("btnSaveStepLabels");
+  const btnLoadGlobal = document.getElementById("btnLoadGlobalLabels");
+  const scopeSel = document.getElementById("stepApplyScope");
+  const box = document.getElementById("selectedStudentsBox");
+
+  if(btn) btn.onclick = openStepEditor;
+  if(btnClose) btnClose.onclick = closeStepEditor;
+
+  if(scopeSel && box){
+    scopeSel.onchange = ()=>{
+      box.style.display = (scopeSel.value === "selected") ? "block" : "none";
+    };
+  }
+
+  // 共通テンプレを読み込み（入力欄を共通テンプレに置き換え）
+  if(btnLoadGlobal){
+    btnLoadGlobal.onclick = ()=>{
+      const labels = state.data.stepLabelsGlobal || safeClone(defaultData.stepLabelsGlobal);
+      renderStepLabelInputs(labels);
+    };
+  }
+
+  if(btnSave){
+    btnSave.onclick = ()=>{
+      const labels = readStepLabelInputs();
+      const scope = scopeSel ? scopeSel.value : "current";
+      const targets = getTargetsByScope(scope);
+
+      // 「共通テンプレ」自体を変えたい場合は、ここで別ボタンにするのが安全。
+      // 今回は “選んだ児童に適用” のみ（上書き保存）。
+      applyStepLabelsToTargets(labels, targets);
+
+      // 画面に反映
+      renderSteps();
+      closeStepEditor();
+      alert(`保存しました（適用：${targets.length}人）`);
+    };
+  }
+}
 function renderSteps(){
   const wrap = document.getElementById("stepsWrap");
   if(!wrap) return;
 
   ensureStudent(state.currentStudent);
   const arr = state.data.stepsByStudent[state.currentStudent];
+  const labels = getStepLabelsFor(state.currentStudent);
 
   wrap.innerHTML = "";
 
   for(let i=0;i<12;i++){
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn stepBtn" + (arr[i] ? " isDone" : "");
-    btn.textContent = String(i+1);
+    btn.className = "btn";
     btn.dataset.stepIndex = String(i);
+
+    // 見た目：番号＋ラベル（小さめ）
+    btn.innerHTML = `
+      <div style="font-weight:700">${i+1}</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.2; margin-top:2px; overflow-wrap:anywhere">
+        ${labels[i] || ""}
+      </div>
+    `;
+
+    // ON/OFF 色
+    if(arr[i]){
+      btn.style.borderColor = "var(--accent)";
+      btn.style.background = "color-mix(in srgb, var(--accent) 18%, var(--btn))";
+    }else{
+      btn.style.borderColor = "var(--line)";
+      btn.style.background = "var(--btn)";
+    }
+
     wrap.appendChild(btn);
   }
 
