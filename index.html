@@ -74,9 +74,12 @@
 
     <!-- 画面切替 -->
     <div class="row" style="margin-bottom:10px">
-      <button class="btn primary" id="btnViewPersonal" type="button">個人</button>
-      <button class="btn" id="btnViewOverview" type="button">一覧</button>
-    </div>
+  <button class="btn primary" id="btnViewPersonal" type="button">個人</button>
+  <button class="btn" id="btnViewOverview" type="button">一覧</button>
+
+  <!-- ★追加：右から出る一覧パネル -->
+  <button class="btn" id="btnToggleSide" type="button">📊 一覧パネル</button>
+</div>
 
     <!-- 個人ビュー -->
     <div id="viewPersonal">
@@ -237,6 +240,47 @@
   </div><!-- /右：入力 card soft -->
 </div><!-- /wrap grid -->
 
+  <!-- ★追加：右から出るサイドドロワー（進捗＆提出） -->
+<div id="sideDrawer" class="drawer" aria-hidden="true">
+  <div class="drawerInner">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="font-weight:800">一覧（進捗 / 提出）</div>
+      <button class="btn" id="btnCloseSide" type="button">閉じる</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <!-- 12時間チェック（サイド） -->
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:800">12時間チェック 一覧</div>
+        <span class="badge">タップで切替</span>
+      </div>
+      <div id="sideOverviewSteps" style="margin-top:10px"></div>
+    </div>
+
+    <!-- 提出率（サイド） -->
+    <div class="card" style="margin-top:12px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:800">提出物 提出率</div>
+        <span class="badge" id="sideOverviewAssignRateBadge">提出率 -/-（-%）</span>
+      </div>
+
+      <div class="sub" style="margin-top:10px">提出物を選択</div>
+      <div class="row">
+        <select id="sideOverviewAssignSelect" class="grow"></select>
+        <button class="btn" id="btnSideOverviewPrevAssign" type="button">←</button>
+        <button class="btn" id="btnSideOverviewNextAssign" type="button">→</button>
+      </div>
+
+      <div id="sideOverviewAssignTable" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ★追加：背景オーバーレイ -->
+<div id="drawerOverlay" class="drawerOverlay" aria-hidden="true"></div>
+  
 <script src="./app.js" defer></script>
 </body>
 </html>
