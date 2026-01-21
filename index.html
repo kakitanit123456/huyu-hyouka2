@@ -150,17 +150,44 @@
 
     <!-- 一覧ビュー -->
     <div id="viewOverview" style="display:none">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div style="font-size:14px;font-weight:700">12時間チェック 一覧</div>
-          <span class="badge">タップで児童を切替</span>
-        </div>
-        <div class="small" style="margin-top:8px">※ 行をクリックすると、その児童に切り替わって「個人」に戻ります</div>
-        <div id="overviewTable" style="margin-top:10px"></div>
-      </div>
+
+  <!-- ① 12時間チェック一覧（既存） -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:700">12時間チェック 一覧</div>
+      <span class="badge">タップで児童を切替</span>
+    </div>
+    <div class="small" style="margin-top:8px">
+      ※ 行をクリックすると、その児童に切り替わって「個人」に戻ります
+    </div>
+    <div id="overviewTable" style="margin-top:10px"></div>
+  </div>
+
+  <!-- ② 提出物 提出率 一覧（★追加） -->
+  <div class="card" style="margin-top:12px">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:700">提出物 提出率 一覧</div>
+      <span class="badge" id="overviewAssignRateBadge">提出率 -/-（-%）</span>
     </div>
 
+    <div class="small" style="margin-top:8px">
+      ※提出物を選ぶと、児童ごとの提出状況と提出率を表示します
+    </div>
+
+    <div class="sub" style="margin-top:10px">提出物を選択</div>
+    <div class="row">
+      <select id="overviewAssignSelect" class="grow"></select>
+      <button class="btn" id="btnOverviewPrevAssign" type="button">←</button>
+      <button class="btn" id="btnOverviewNextAssign" type="button">→</button>
+    </div>
+
+    <div id="overviewAssignTable" style="margin-top:10px"></div>
+
+    <div class="small" style="margin-top:8px">
+      ※行をクリックすると、その児童に切り替わって「個人」に戻ります
+    </div>
   </div>
+
 </div>
 
 <script src="./app.js" defer></script>
