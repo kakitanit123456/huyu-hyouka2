@@ -256,23 +256,12 @@
 
    <div class="sub" style="margin-top:12px">12個の内容</div>
    <div id="stepLabelInputs" style="display:grid; gap:8px; margin-top:8px"></div>
- </div>
+ </div
  <!-- ▲ 編集パネルここまで -->
       <div class="row" style="margin-top:10px">
         <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
       </div>
     </div>
-      
-      <div class="sub" style="margin-top:10px">計画（plan）</div>
-      <input id="planInput" placeholder="例：観察カード、写真、発表準備 など" />
-
-      <div class="sub" style="margin-top:10px">進捗（status）</div>
-      <select id="statusSelect">
-        <option value="">（未設定）</option>
-        <option value="未">未</option>
-        <option value="途中">途中</option>
-        <option value="完了">完了</option>
-      </select>
     </div>
 
     <div class="card" style="margin-top:12px">
@@ -313,7 +302,6 @@
 // ===== Storage keys =====
 const THEME_KEY = "rika4_theme_v3";
 const DATA_KEY  = "rika4_evaltool_v1";
-const SYNC_KEY  = "rika4_sync_enabled_v1";
 
 // ===== Theme =====
 function applyTheme(mode){
@@ -338,7 +326,7 @@ const defaultData = {
   "（サンプル）児童D","（サンプル）児童E","（サンプル）児童F","（サンプル）児童G"
 ],
   studentGroup: {},
-  progressByStudent: {},
+  
   noteByStudent: {},
   photosByStudent: {},
   stepsByStudent: {},
@@ -421,7 +409,6 @@ const state = {
 // ===== Helpers =====
 function ensureStudent(name){
   if(state.data.studentGroup[name] == null) state.data.studentGroup[name] = "";
-  if(state.data.progressByStudent[name] == null) state.data.progressByStudent[name] = { plan:"", status:"" };
   if(state.data.noteByStudent[name] == null) state.data.noteByStudent[name] = "";
   if(state.data.photosByStudent[name] == null) state.data.photosByStudent[name] = "";
   if(!state.data.stepsByStudent) state.data.stepsByStudent = {};
@@ -434,24 +421,6 @@ function getGroupMembers(studentName){
   const g = (state.data.studentGroup && state.data.studentGroup[studentName]) || "";
   if(!g) return [studentName];
   return state.data.students.filter(n => ((state.data.studentGroup && state.data.studentGroup[n]) || "") === g);
-}
-
-// plan/status だけ同期（note/photo/steps は同期しない）
-function syncProgressToGroup(fromStudent){
-  const members = getGroupMembers(fromStudent);
-  ensureStudent(fromStudent);
-
-  const src = state.data.progressByStudent[fromStudent];
-
-  members.forEach(m=>{
-    ensureStudent(m);
-    state.data.progressByStudent[m] = {
-      plan: src.plan || "",
-      status: src.status || ""
-    };
-  });
-
-  saveData();
 }
 
 // ===== UI: student select =====
@@ -519,91 +488,6 @@ function autoAssignGroups223(){
   saveData();
   renderGroupUI();
   renderSyncInfo();
-}
-
-// ===== UI: sync toggle & info =====
-function renderSyncToggle(){
-  const toggle = document.getElementById("syncToggle");
-  if(!toggle) return;
-  toggle.checked = (localStorage.getItem(SYNC_KEY) === "1");
-  toggle.onchange = ()=>{
-    localStorage.setItem(SYNC_KEY, toggle.checked ? "1" : "0");
-    renderSyncInfo();
-  };
-}
-
-function renderSyncInfo(){
-  const info = document.getElementById("syncInfo");
-  if(!info) return;
-
-  const enabled = (localStorage.getItem(SYNC_KEY) === "1");
-  const members = getGroupMembers(state.currentStudent);
-  const g = (state.data.studentGroup && state.data.studentGroup[state.currentStudent]) || "";
-
-  if(!enabled){
-    info.textContent = "同期：OFF（この児童だけ更新）";
-    return;
-  }
-  info.textContent = g
-    ? `同期：ON／対象グループ：${g}（同期先 ${members.length}人）`
-    : "同期：ON／グループ未設定（この児童だけ＝同期なし）";
-}
-
-// ===== UI: inputs (plan/status/note/photo) =====
-function renderInputs(){
-  ensureStudent(state.currentStudent);
-
-  const planEl = document.getElementById("planInput");
-  const statusEl = document.getElementById("statusSelect");
-  const noteEl = document.getElementById("noteInput");
-
-  if(planEl) planEl.value = state.data.progressByStudent[state.currentStudent].plan || "";
-  if(statusEl) statusEl.value = state.data.progressByStudent[state.currentStudent].status || "";
-  if(noteEl) noteEl.value = state.data.noteByStudent[state.currentStudent] || "";
-
-  renderPhotoPreview();
-}
-
-function bindInputs(){
-  const planEl = document.getElementById("planInput");
-  const statusEl = document.getElementById("statusSelect");
-  const noteEl = document.getElementById("noteInput");
-  const toggle = document.getElementById("syncToggle");
-
-  const isSyncEnabled = ()=> (toggle && toggle.checked) || (localStorage.getItem(SYNC_KEY) === "1");
-
-  const saveAndMaybeSync = ()=>{
-    saveData();
-    if(isSyncEnabled()){
-      syncProgressToGroup(state.currentStudent);
-    }
-    renderSyncInfo();
-    renderInputs();
-  };
-
-  if(planEl){
-    planEl.oninput = ()=>{
-      ensureStudent(state.currentStudent);
-      state.data.progressByStudent[state.currentStudent].plan = planEl.value;
-      saveAndMaybeSync();
-    };
-  }
-
-  if(statusEl){
-    statusEl.onchange = ()=>{
-      ensureStudent(state.currentStudent);
-      state.data.progressByStudent[state.currentStudent].status = statusEl.value;
-      saveAndMaybeSync();
-    };
-  }
-
-  if(noteEl){
-    noteEl.oninput = ()=>{
-      ensureStudent(state.currentStudent);
-      state.data.noteByStudent[state.currentStudent] = noteEl.value;
-      saveData(); // 個人なので同期しない
-    };
-  }
 }
 
 /**********************
@@ -1091,9 +975,6 @@ stepLabelsByStudent: (d.stepLabelsByStudent && typeof d.stepLabelsByStudent === 
     saveData();
     renderStudentSelect();
     renderGroupUI();
-    renderSyncToggle();
-    renderSyncInfo();
-    renderInputs();
     renderSteps();
 
     alert("インポート完了！");
