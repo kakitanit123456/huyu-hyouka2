@@ -164,25 +164,6 @@
       </select>
       <button class="btn" id="btnAutoGroup" type="button">自動(2・2・3)</button>
     </div>
-    <!-- ★ 12時間 進捗チェック（個人） -->
-    <div class="card" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div style="font-size:14px;font-weight:700">12時間 進捗チェック</div>
-        <span class="badge" id="stepCount">0/12</span>
-      </div>
-
-      <div class="small" style="margin-top:8px">
-        ※このチェックは「個人管理」（グループ同期しない）
-      </div>
-
-      <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px">
-        <!-- JSで 1〜12 を生成 -->
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
-      </div>
-    </div>
     <div class="small" id="groupCount" style="margin-top:6px">
       人数：G1=0 / G2=0 / G3=0（未=0）
     </div>
@@ -217,6 +198,26 @@
         <span class="badge">同期対象</span>
       </div>
 
+    <!-- ★ 12時間 進捗チェック（個人） -->
+    <div class="card" style="margin-top:12px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:14px;font-weight:700">12時間 進捗チェック</div>
+        <span class="badge" id="stepCount">0/12</span>
+      </div>
+
+      <div class="small" style="margin-top:8px">
+        ※このチェックは「個人管理」（グループ同期しない）
+      </div>
+
+      <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px">
+        <!-- JSで 1〜12 を生成 -->
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
+      </div>
+    </div>
+      
       <div class="sub" style="margin-top:10px">計画（plan）</div>
       <input id="planInput" placeholder="例：観察カード、写真、発表準備 など" />
 
