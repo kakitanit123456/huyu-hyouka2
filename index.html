@@ -427,7 +427,6 @@ function renderStudentSelect(){
   sel.onchange = ()=>{
     state.currentStudent = sel.value;
     renderGroupUI();
-    renderInputs();
     renderSteps();
     saveData();
   };
@@ -748,7 +747,6 @@ function bindRosterButtons(){
       saveData();
       renderStudentSelect();
       renderGroupUI();
-      renderInputs();
       renderSteps();
     };
 
@@ -777,7 +775,6 @@ function bindRosterButtons(){
       saveData();
       renderStudentSelect();
       renderGroupUI();
-      renderInputs();
       renderSteps();
     };
   }
@@ -974,7 +971,6 @@ function resetAll(){
   saveData();
   renderStudentSelect();
   renderGroupUI();
-  renderInputs();
   renderSteps();
 
   alert("全データを削除しました。");
@@ -992,7 +988,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   renderStudentSelect();
   renderGroupUI();
-  renderInputs();
   renderSteps();
   bindInputs();
   bindRosterButtons();
