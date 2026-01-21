@@ -139,17 +139,24 @@ function loadData(){
         d.assignStatusByStudent[name] = {};
       }
 
-      // 提出状況（提出物ごと）…存在しなければ未提出で作る
-      d.assignments.forEach(a=>{
-        const id = a.id;
-        if(!d.assignStatusByStudent[name][id] || typeof d.assignStatusByStudent[name][id] !== "object"){
-          d.assignStatusByStudent[name][id] = { submitted:false };
-        }else{
-          if(typeof d.assignStatusByStudent[name][id].submitted !== "boolean"){
-            d.assignStatusByStudent[name][id].submitted = false;
-          }
-        }
-      });
+      // 提出状況（提出物ごと）…存在しなければ作る（提出/メモ/写真3枚）
+d.assignments.forEach(a=>{
+  const id = a.id;
+
+  if(!d.assignStatusByStudent[name][id] || typeof d.assignStatusByStudent[name][id] !== "object"){
+    d.assignStatusByStudent[name][id] = { submitted:false, memo:"", photos:["","",""] };
+  }else{
+    const obj = d.assignStatusByStudent[name][id];
+
+    if(typeof obj.submitted !== "boolean") obj.submitted = false;
+    if(typeof obj.memo !== "string") obj.memo = "";
+    if(!Array.isArray(obj.photos)) obj.photos = ["","",""];
+
+    // 3枚に正規化
+    obj.photos = obj.photos.slice(0,3).map(x => (typeof x === "string" ? x : ""));
+    while(obj.photos.length < 3) obj.photos.push("");
+  }
+});
     });
 
     // 名簿が空なら最低1人
@@ -206,14 +213,20 @@ function ensureStudent(name){
   // 現在の提出物マスタに合わせて「不足分」を作る
   const list = getAssignments();
   list.forEach(a=>{
-    const id = a.id;
-    if(!state.data.assignStatusByStudent[name][id] || typeof state.data.assignStatusByStudent[name][id] !== "object"){
-      state.data.assignStatusByStudent[name][id] = { submitted:false };
-    }
-    if(typeof state.data.assignStatusByStudent[name][id].submitted !== "boolean"){
-      state.data.assignStatusByStudent[name][id].submitted = false;
-    }
-  });
+  const id = a.id;
+
+  if(!state.data.assignStatusByStudent[name][id] || typeof state.data.assignStatusByStudent[name][id] !== "object"){
+    state.data.assignStatusByStudent[name][id] = { submitted:false, memo:"", photos:["","",""] };
+  }
+
+  const obj = state.data.assignStatusByStudent[name][id];
+  if(typeof obj.submitted !== "boolean") obj.submitted = false;
+  if(typeof obj.memo !== "string") obj.memo = "";
+  if(!Array.isArray(obj.photos)) obj.photos = ["","",""];
+
+  obj.photos = obj.photos.slice(0,3).map(x => (typeof x === "string" ? x : ""));
+  while(obj.photos.length < 3) obj.photos.push("");
+});
 }
 
 function getGroupMembers(studentName){
