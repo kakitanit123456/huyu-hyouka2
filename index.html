@@ -92,6 +92,35 @@
 
         <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px"></div>
 
+<!-- 提出物（提出：済/未）★追加 -->
+<div class="card" style="margin-top:12px">
+  <div class="row" style="justify-content:space-between;align-items:center">
+    <div style="font-size:14px;font-weight:700">提出物（提出：済/未）</div>
+    <span class="badge" id="personalAssignBadge">提出：-</span>
+  </div>
+
+  <div class="small" style="margin-top:8px">
+    ※提出物を選んで「提出：未/済」を切り替えます（児童ごとに保存）
+  </div>
+
+  <div class="sub" style="margin-top:10px">提出物を選択</div>
+  <div class="row">
+    <select id="personalAssignSelect" class="grow"></select>
+    <button class="btn" id="btnPersonalPrevAssign" type="button">←</button>
+    <button class="btn" id="btnPersonalNextAssign" type="button">→</button>
+  </div>
+
+  <div class="small" id="personalAssignStatusText" style="margin-top:10px">
+    ---
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <button class="btn primary" id="btnToggleSubmitted" type="button">
+      提出：未 → 済にする
+    </button>
+  </div>
+</div>
+        
         <!-- ラベル編集パネル -->
         <div class="card" id="stepEditor" style="display:none; margin-top:12px">
           <div class="row" style="justify-content:space-between;align-items:center">
