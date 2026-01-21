@@ -249,9 +249,10 @@
    </div>
 
    <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
-     <button class="btn" id="btnLoadGlobalLabels" type="button">共通テンプレを読み込み</button>
-     <button class="btn primary" id="btnSaveStepLabels" type="button">保存して適用</button>
-   </div>
+  <button class="btn" id="btnLoadGlobalLabels" type="button">共通テンプレを読み込み</button>
+  <button class="btn" id="btnSaveGlobalLabels" type="button">共通テンプレとして保存</button> <!-- ★追加 -->
+  <button class="btn primary" id="btnSaveStepLabels" type="button">保存して適用</button>
+</div>
 
    <div class="sub" style="margin-top:12px">12個の内容</div>
    <div id="stepLabelInputs" style="display:grid; gap:8px; margin-top:8px"></div>
@@ -761,19 +762,14 @@ function bindStepEditor(){
   const btnClose = document.getElementById("btnCloseStepEditor");
   const btnSave = document.getElementById("btnSaveStepLabels");
   const btnLoadGlobal = document.getElementById("btnLoadGlobalLabels");
+  const btnSaveGlobal = document.getElementById("btnSaveGlobalLabels"); // ★追加
   const scopeSel = document.getElementById("stepApplyScope");
   const box = document.getElementById("selectedStudentsBox");
 
   if(btn) btn.onclick = openStepEditor;
   if(btnClose) btnClose.onclick = closeStepEditor;
 
-  if(scopeSel && box){
-    scopeSel.onchange = ()=>{
-      box.style.display = (scopeSel.value === "selected") ? "block" : "none";
-    };
-  }
-
-  // 共通テンプレを読み込み（入力欄を共通テンプレに置き換え）
+  // ① 共通テンプレを読み込み（表示だけ）
   if(btnLoadGlobal){
     btnLoadGlobal.onclick = ()=>{
       const labels = state.data.stepLabelsGlobal || safeClone(defaultData.stepLabelsGlobal);
@@ -781,17 +777,31 @@ function bindStepEditor(){
     };
   }
 
+  // ② 共通テンプレとして保存（今回追加）
+  if(btnSaveGlobal){
+    btnSaveGlobal.onclick = ()=>{
+      if(!confirm("今の内容を共通テンプレとして保存しますか？")) return;
+      const labels = readStepLabelInputs();
+      state.data.stepLabelsGlobal = labels.slice();
+      // 全員の「上書き」を消して、共通テンプレ強制にする
+if(state.data.stepLabelsByStudent && typeof state.data.stepLabelsByStudent === "object"){
+  state.data.stepLabelsByStudent = {};
+}else{
+  state.data.stepLabelsByStudent = {};
+}
+      saveData();
+      renderSteps();
+      alert("共通テンプレを保存しました！");
+    };
+  }
+
+  // ③ 児童への適用
   if(btnSave){
     btnSave.onclick = ()=>{
       const labels = readStepLabelInputs();
       const scope = scopeSel ? scopeSel.value : "current";
       const targets = getTargetsByScope(scope);
-
-      // 「共通テンプレ」自体を変えたい場合は、ここで別ボタンにするのが安全。
-      // 今回は “選んだ児童に適用” のみ（上書き保存）。
       applyStepLabelsToTargets(labels, targets);
-
-      // 画面に反映
       renderSteps();
       closeStepEditor();
       alert(`保存しました（適用：${targets.length}人）`);
