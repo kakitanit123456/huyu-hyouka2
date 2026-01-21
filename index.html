@@ -375,14 +375,6 @@ if(!Array.isArray(d.stepLabelsGlobal) || d.stepLabelsGlobal.length !== 12){
 if(!d.stepLabelsByStudent || typeof d.stepLabelsByStudent !== "object"){
   d.stepLabelsByStudent = {};
 }
-/* [ADD] stepラベル保存領域の補完（loadData内） */
- // ★ 追加：stepラベルの保存領域を補完
- if(!Array.isArray(d.stepLabelsGlobal) || d.stepLabelsGlobal.length !== 12){
-   d.stepLabelsGlobal = safeClone(defaultData.stepLabelsGlobal);
- }
- if(!d.stepLabelsByStudent || typeof d.stepLabelsByStudent !== "object"){
-   d.stepLabelsByStudent = {};
- }
     // 児童ごとの不足を補完
     d.students.forEach(name=>{
       if(d.studentGroup[name] == null) d.studentGroup[name] = "";
@@ -721,8 +713,9 @@ function openStepEditor(){
   const scopeSel = document.getElementById("stepApplyScope");
   const box = document.getElementById("selectedStudentsBox");
   if(scopeSel && box){
+  scopeSel.onchange = ()=>{
     box.style.display = (scopeSel.value === "selected") ? "block" : "none";
-  }
+  };
 }
 
 function closeStepEditor(){
@@ -784,11 +777,7 @@ function bindStepEditor(){
       const labels = readStepLabelInputs();
       state.data.stepLabelsGlobal = labels.slice();
       // 全員の「上書き」を消して、共通テンプレ強制にする
-if(state.data.stepLabelsByStudent && typeof state.data.stepLabelsByStudent === "object"){
-  state.data.stepLabelsByStudent = {};
-}else{
-  state.data.stepLabelsByStudent = {};
-}
+      state.data.stepLabelsByStudent = {};
       saveData();
       renderSteps();
       alert("共通テンプレを保存しました！");
