@@ -578,9 +578,10 @@ function openStepEditor(){
   const scopeSel = document.getElementById("stepApplyScope");
   const box = document.getElementById("selectedStudentsBox");
   if(scopeSel && box){
-  scopeSel.onchange = ()=>{
-    box.style.display = (scopeSel.value === "selected") ? "block" : "none";
-  };
+    scopeSel.onchange = ()=>{
+      box.style.display = (scopeSel.value === "selected") ? "block" : "none";
+    };
+  }
 }
 
 function closeStepEditor(){
@@ -745,7 +746,6 @@ function bindRosterButtons(){
       state.currentStudent = name;
       inp.value = "";
       saveData();
-
       renderStudentSelect();
       renderGroupUI();
       renderInputs();
@@ -775,7 +775,6 @@ function bindRosterButtons(){
 
       state.currentStudent = state.data.students[0];
       saveData();
-
       renderStudentSelect();
       renderGroupUI();
       renderInputs();
@@ -995,7 +994,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderGroupUI();
   renderInputs();
   renderSteps();
-
   bindInputs();
   bindRosterButtons();
   bindPhoto();
