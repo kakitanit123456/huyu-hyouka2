@@ -417,6 +417,7 @@ function renderPersonalAssignments(){
     state.currentAssignId = sel.value;
     saveData();
     renderPersonalAssignments();
+    renderSideOverview(); // ★追加
   };
 
   // ← →
@@ -1145,7 +1146,12 @@ function renderOverviewAssignments(){
   table.appendChild(wrap);
 }
 
-renderSideOverview()
+function renderSideOverview(){
+  const d = document.getElementById("sideDrawer");
+  if(!d || !d.classList.contains("isOpen")) return; // ★開いてる時だけ更新
+  renderSideOverviewSteps();
+  renderSideOverviewAssignments();
+}
 
 function renderSideOverviewSteps(){
   const host = document.getElementById("sideOverviewSteps");
