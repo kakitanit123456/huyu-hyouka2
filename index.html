@@ -303,6 +303,7 @@
     progressByStudent: {},
     noteByStudent: {},
     photosByStudent: {}
+    stepsByStudent: {}            // { "山田": [true,false,...(12)] } ← 個人（同期しない）
   };
 
   function safeClone(obj){
@@ -319,6 +320,7 @@
       if(!d.progressByStudent || typeof d.progressByStudent !== "object") d.progressByStudent = {};
       if(!d.noteByStudent || typeof d.noteByStudent !== "object") d.noteByStudent = {};
       if(!d.photosByStudent || typeof d.photosByStudent !== "object") d.photosByStudent = {};
+      if(!d.stepsByStudent || typeof d.stepsByStudent !== "object") d.stepsByStudent = {};
 
       // 児童ごとの行を必ず用意（欠けてても復元）
       d.students.forEach(name=>{
@@ -331,7 +333,12 @@
         }
         if(d.noteByStudent[name] == null) d.noteByStudent[name] = "";
         if(d.photosByStudent[name] == null) d.photosByStudent[name] = "";
-      });
+      }
+        // 12時間チェック（個人）
+        if(!Array.isArray(d.stepsByStudent[name]) || d.stepsByStudent[name].length !== 12){
+        d.stepsByStudent[name] = Array.from({length:12}, ()=> false);
+}
+                        );
 
       // studentsが空なら最低1名
       if(d.students.length === 0){
@@ -364,6 +371,11 @@
     if(!state.data.progressByStudent[name]) state.data.progressByStudent[name] = { plan:"", status:"" };
     if(state.data.noteByStudent[name] == null) state.data.noteByStudent[name] = "";
     if(state.data.photosByStudent[name] == null) state.data.photosByStudent[name] = "";
+    // 12時間チェック（個人）
+if(!state.data.stepsByStudent) state.data.stepsByStudent = {};
+if(!Array.isArray(state.data.stepsByStudent[name]) || state.data.stepsByStudent[name].length !== 12){
+  state.data.stepsByStudent[name] = Array.from({length:12}, ()=> false);
+}
   }
 
   function getGroupMembers(studentName){
@@ -411,6 +423,7 @@
       renderGroupUI();
       renderSyncInfo();
       renderInputs();
+      renderSteps();   // ★追加：児童ごとのチェックを描画し直す
       saveData();
     };
   }
@@ -515,7 +528,86 @@
       renderSyncInfo();
       renderInputs(); // 同期した結果を即反映
     };
+/**********************
+ * 12時間チェック（個人・同期しない）
+ **********************/
+function updateStepCount(){
+  const badge = document.getElementById("stepCount");
+  if(!badge) return;
+  ensureStudent(state.currentStudent);
 
+  const arr = state.data.stepsByStudent[state.currentStudent] || [];
+  const done = arr.filter(Boolean).length;
+  badge.textContent = `${done}/12`;
+}
+
+function renderSteps(){
+  const wrap = document.getElementById("stepsWrap");
+  if(!wrap) return;
+
+  ensureStudent(state.currentStudent);
+  const arr = state.data.stepsByStudent[state.currentStudent];
+
+  // いったん中身を消して作り直す（児童切替に強い）
+  wrap.innerHTML = "";
+
+  for(let i=0;i<12;i++){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn";                 // 既存の見た目を流用
+    btn.textContent = String(i+1);
+    btn.dataset.stepIndex = String(i);     // 何番かを持たせる
+
+    // ON/OFFで見た目を変える（軽く）
+    if(arr[i]){
+      btn.style.borderColor = "var(--accent)";
+    }else{
+      btn.style.borderColor = "var(--line)";
+    }
+
+    wrap.appendChild(btn);
+  }
+
+  updateStepCount();
+}
+
+function bindSteps(){
+  const wrap = document.getElementById("stepsWrap");
+  const clearBtn = document.getElementById("btnClearSteps");
+  if(!wrap) return;
+
+  // 12ボタンをクリックしたらトグル保存（イベント委任）
+  wrap.addEventListener("click", (e)=>{
+    const t = e.target;
+    if(!(t instanceof HTMLElement)) return;
+    if(t.tagName !== "BUTTON") return;
+
+    const idxStr = t.dataset.stepIndex;
+    if(idxStr == null) return;
+
+    const idx = Number(idxStr);
+    if(Number.isNaN(idx) || idx < 0 || idx > 11) return;
+
+    ensureStudent(state.currentStudent);
+    const arr = state.data.stepsByStudent[state.currentStudent];
+
+    arr[idx] = !arr[idx]; // ON/OFF反転
+    saveData();
+
+    renderSteps(); // 反映
+  });
+
+  // 全解除ボタン
+  if(clearBtn){
+    clearBtn.onclick = ()=>{
+      if(!confirm("この児童の12時間チェックをすべて外しますか？")) return;
+      ensureStudent(state.currentStudent);
+      state.data.stepsByStudent[state.currentStudent] = Array.from({length:12}, ()=> false);
+      saveData();
+      renderSteps();
+    };
+  }
+}
     if(planEl){
       planEl.oninput = ()=>{
         ensureStudent(state.currentStudent);
@@ -764,7 +856,7 @@ OK → 1) 貼り付け
 
       // いったん state.data を置き換え
       state.data = {
-        students: Array.isArray(d.students) ? d.students.slice() : structuredClone(DEFAULT.students),
+        students: Array.isArray(d.students) ? d.students.slice() : safeClone(defaultData.students),
         studentGroup: (d.studentGroup && typeof d.studentGroup === "object") ? d.studentGroup : {},
         photosByStudent: (d.photosByStudent && typeof d.photosByStudent === "object") ? d.photosByStudent : {},
         progressByStudent: (d.progressByStudent && typeof d.progressByStudent === "object") ? d.progressByStudent : {},
@@ -800,7 +892,7 @@ OK → 1) 貼り付け
     // 同期設定は残す/消すどちらでもいいが、ここでは残す（好みで変更OK）
     // localStorage.removeItem(SYNC_KEY);
 
-    state.data = structuredClone(DEFAULT);
+    state.data = safeClone(defaultData);
     state.currentStudent = state.data.students[0];
 
     saveData();
@@ -831,11 +923,13 @@ OK → 1) 貼り付け
     renderSyncToggle();
     renderSyncInfo();
     renderInputs();
+    renderSteps();
 
     // bind
     bindInputs();
     bindRosterButtons();
     bindPhoto();
+    bindSteps();
 
     // export/import/reset
     const exBtn = document.getElementById("btnExport");
@@ -848,7 +942,5 @@ OK → 1) 貼り付け
     if(rsBtn) rsBtn.onclick = resetAll;
   });
 </script>
-</body>
-</html>
 </body>
 </html>
