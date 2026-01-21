@@ -432,6 +432,7 @@ function renderPersonalAssignments(){
       state.currentAssignId = assigns[nextIdx].id;
       saveData();
       renderPersonalAssignments();
+      renderSideOverview(); // ★追加
     };
   }
 
@@ -443,6 +444,7 @@ function renderPersonalAssignments(){
       state.currentAssignId = assigns[nextIdx].id;
       saveData();
       renderPersonalAssignments();
+      renderSideOverview(); // ★追加
     };
   }
 
@@ -557,7 +559,7 @@ function openSideDrawer(){
   o.setAttribute("aria-hidden", "false");
 
   // ★開いたタイミングでサイド一覧を描画
-  renderSideOverview();
+  renderSideOverview(true);
 }
 
 function closeSideDrawer(){
@@ -1146,9 +1148,11 @@ function renderOverviewAssignments(){
   table.appendChild(wrap);
 }
 
-function renderSideOverview(){
+function renderSideOverview(force = false){
   const d = document.getElementById("sideDrawer");
-  if(!d || !d.classList.contains("isOpen")) return; // ★開いてる時だけ更新
+  if(!d) return;
+  if(!force && !d.classList.contains("isOpen")) return;
+
   renderSideOverviewSteps();
   renderSideOverviewAssignments();
 }
