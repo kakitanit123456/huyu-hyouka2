@@ -1,0 +1,110 @@
+/* 12時間チェックの見た目 */
+.stepBtn{
+  background: var(--card2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 700;
+}
+.stepBtn.isDone{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #08121f;
+}
+:root[data-theme="light"] .stepBtn.isDone{ color: #07121f; }
+
+:root{
+  --bg:#0b0c10; --card:#12141a; --card2:#161a22; --text:#e8eef7; --muted:#a9b3c2;
+  --line:#232a36; --chip:#1c2330; --btn:#1f2a3a; --accent:#59a8ff;
+  --danger:#ff6b6b;
+}
+:root[data-theme="light"]{
+  --bg:#f6f7fb; --card:#ffffff; --card2:#f1f3f8; --text:#0c1220; --muted:#4b5565;
+  --line:#d9e0ea; --chip:#eef2f8; --btn:#ffffff;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
+
+header{
+  position:sticky; top:0; z-index:1000;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom:1px solid var(--line);
+}
+:root[data-theme="light"] header{ background:rgba(255,255,255,.92); }
+
+.wrap{max-width:1250px;margin:0 auto;padding:14px 14px 22px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:12px}
+@media (min-width: 920px){ .grid{grid-template-columns: 360px 1fr} }
+
+.grow{flex:1; min-width:0}
+h1{font-size:16px;margin:0 0 6px 0;letter-spacing:.02em}
+.sub{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.small{font-size:12px;color:var(--muted)}
+.hr{height:1px;background:var(--line);margin:10px 0}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.card.soft{background:var(--card2)}
+.sec-title{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:8px}
+.sec-title h2{font-size:14px;margin:0}
+
+.btn{
+  background:var(--btn);
+  border:1px solid var(--line);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:12px;
+  font-size:13px;
+  cursor:pointer;
+  pointer-events:auto;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:hover{border-color: color-mix(in srgb, var(--line) 40%, #ffffff 30%)}
+.btn.primary{border-color: color-mix(in srgb, var(--accent) 60%, var(--line));}
+.btn.danger{border-color: color-mix(in srgb, var(--danger) 65%, var(--line)); color: color-mix(in srgb, var(--danger) 70%, var(--text));}
+
+input,select,textarea{
+  background:var(--card2);
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:10px;
+  padding:10px;
+  font-size:13px;
+  width:100%;
+  min-width:0;
+}
+textarea{min-height:84px; resize:vertical}
+
+/* iPad横で header が “かぶさってボタンが押せない” 対策 */
+.headerBar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+  position:relative;
+  z-index:2000;
+}
+.headerLeft{flex:1 1 auto; min-width:0}
+.headerLeft h1{overflow-wrap:anywhere}
+.headerActions{flex:0 0 auto; display:flex; gap:10px; flex-wrap:wrap; z-index:3000}
+#btnTheme{position:relative; z-index:4000; pointer-events:auto}
+
+.pill{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 10px; border:1px solid var(--line); border-radius:999px;
+  background:var(--chip); color:var(--muted); font-size:12px;
+}
+.badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:2px 8px; border-radius:999px; border:1px solid var(--line);
+  background:var(--chip); color:var(--muted); font-size:12px;
+}
