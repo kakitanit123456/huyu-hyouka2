@@ -15,7 +15,7 @@ const THEME_KEY = "rika4_theme_v3";
 const DATA_KEY  = "rika4_evaltool_v2"; // ★ v1でも動くが、破壊的変更が増えるならv2推奨
 
 /* =========================
-   2) Theme
+   2) Themeƒ
 ========================= */
 function applyTheme(mode){
   document.documentElement.dataset.theme = mode;
@@ -1541,8 +1541,13 @@ function resetAll(){
   renderSteps();
 
   alert("全データを削除しました。");
-  renderPersonalAssignments();
-  renderSideOverview(true); // サイド開いてたら反映
+
+// 提出物UIを再構築
+renderPersonalAssignments();
+
+// サイドが存在しているときだけ強制更新
+if(document.getElementById("sideDrawer")){
+  renderSideOverview(true);
 }
 
 /* ====================================================
