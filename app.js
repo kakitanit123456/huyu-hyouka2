@@ -261,6 +261,123 @@ function setView(mode){
   }
 }
 
+/* ====================================================
+   Step B：個人ビュー 提出物（提出：済/未）
+==================================================== */
+
+function initPersonalAssignments(){
+  const sel = document.getElementById("personalAssignSelect");
+  if(!sel) return;
+
+  const list = getAssignments();
+  if(list.length === 0){
+    state.currentAssignId = null;
+    return;
+  }
+
+  // まだ選択がなければ先頭
+  if(!state.currentAssignId || !list.some(a => a.id === state.currentAssignId)){
+    state.currentAssignId = list[0].id;
+  }
+}
+
+function renderPersonalAssignments(){
+  const sel = document.getElementById("personalAssignSelect");
+  const badge = document.getElementById("personalAssignBadge");
+  const statusText = document.getElementById("personalAssignStatusText");
+  const toggleBtn = document.getElementById("btnToggleSubmitted");
+  if(!sel || !badge || !statusText || !toggleBtn) return;
+
+  initPersonalAssignments();
+
+  const assigns = getAssignments();
+  sel.innerHTML = "";
+
+  assigns.forEach(a=>{
+    const o = document.createElement("option");
+    o.value = a.id;
+    o.textContent = a.title;
+    sel.appendChild(o);
+  });
+
+  if(state.currentAssignId){
+    sel.value = state.currentAssignId;
+  }
+
+  // 提出物を選び直したら再描画
+  sel.onchange = ()=>{
+    state.currentAssignId = sel.value;
+    saveData();
+    renderPersonalAssignments();
+  };
+
+  // ← →
+  const prevBtn = document.getElementById("btnPersonalPrevAssign");
+  const nextBtn = document.getElementById("btnPersonalNextAssign");
+
+  if(prevBtn){
+    prevBtn.onclick = ()=>{
+      if(assigns.length === 0) return;
+      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
+      const nextIdx = (idx <= 0) ? assigns.length - 1 : idx - 1;
+      state.currentAssignId = assigns[nextIdx].id;
+      saveData();
+      renderPersonalAssignments();
+    };
+  }
+
+  if(nextBtn){
+    nextBtn.onclick = ()=>{
+      if(assigns.length === 0) return;
+      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
+      const nextIdx = (idx >= assigns.length - 1) ? 0 : idx + 1;
+      state.currentAssignId = assigns[nextIdx].id;
+      saveData();
+      renderPersonalAssignments();
+    };
+  }
+
+  // 児童×提出物の提出状況
+  const student = state.currentStudent;
+  const assignId = state.currentAssignId;
+
+  if(!student || !assignId){
+    badge.textContent = "提出：-";
+    statusText.textContent = "---";
+    toggleBtn.disabled = true;
+    return;
+  }
+
+  ensureStudent(student);
+
+  const st = state.data.assignStatusByStudent?.[student]?.[assignId];
+  const submitted = !!(st && st.submitted);
+
+  badge.textContent = submitted ? "提出：済" : "提出：未";
+  statusText.textContent = `提出物「${getAssignTitle(assignId)}」：${submitted ? "提出済み" : "未提出"}`;
+
+  toggleBtn.disabled = false;
+  toggleBtn.textContent = submitted ? "提出：済 → 未に戻す" : "提出：未 → 済にする";
+
+  // ボタンで提出状況をトグル
+  toggleBtn.onclick = ()=>{
+    ensureStudent(student);
+
+    // submitted を反転
+    state.data.assignStatusByStudent[student][assignId].submitted = !submitted;
+
+    saveData();
+    renderPersonalAssignments();
+
+    // 一覧表示中なら提出率カードも更新
+    const overview = document.getElementById("viewOverview");
+    if(overview && overview.style.display !== "none"){
+      renderOverviewAssignments();
+    }
+  };
+}
+
+
 function bindViewButtons(){
   const bP = document.getElementById("btnViewPersonal");
   const bO = document.getElementById("btnViewOverview");
@@ -295,6 +412,8 @@ function renderStudentSelect(){
     renderGroupUI();
     renderSteps();
     updateStepCount();
+
+   renderPersonalAssignments(); // ★追加：個人の提出物表示も児童に合わせて更新
 
     saveData();
   };
@@ -647,15 +766,16 @@ function renderOverviewSteps(){
 
     // 行クリック → その児童へ切替して「個人」に戻る
     row.onclick = ()=>{
-      state.currentStudent = name;
-      saveData();
+  state.currentStudent = name;
+  saveData();
 
-      renderStudentSelect();
-      renderGroupUI();
-      renderSteps();
+  renderStudentSelect();
+  renderGroupUI();
+  renderSteps();
+  renderPersonalAssignments(); // ★追加
 
-      setView("personal");
-    };
+  setView("personal");
+};
 
     row.appendChild(left);
     row.appendChild(right);
@@ -801,15 +921,16 @@ function renderOverviewAssignments(){
 
     // 行クリック → その児童へ切替して「個人」に戻る
     row.onclick = ()=>{
-      state.currentStudent = name;
-      saveData();
+  state.currentStudent = name;
+  saveData();
 
-      renderStudentSelect();
-      renderGroupUI();
-      renderSteps();
+  renderStudentSelect();
+  renderGroupUI();
+  renderSteps();
+  renderPersonalAssignments(); // ★追加
 
-      setView("personal");
-    };
+  setView("personal");
+};
 
     row.appendChild(left);
     row.appendChild(right);
@@ -1044,6 +1165,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderStudentSelect();
   renderGroupUI();
   renderSteps();
+  renderPersonalAssignments(); // ★追加（Step B）
 
   // bind
   bindRosterButtons();
