@@ -753,6 +753,7 @@ function bindSteps(){
       state.data.stepsByStudent[state.currentStudent] = Array.from({length:12}, ()=> false);
       saveData();
       renderSteps();
+      renderSideOverview(); // ★追加
     };
   }
 }
@@ -1540,6 +1541,8 @@ function resetAll(){
   renderSteps();
 
   alert("全データを削除しました。");
+  renderPersonalAssignments();
+  renderSideOverview(true); // サイド開いてたら反映
 }
 
 /* ====================================================
