@@ -488,7 +488,8 @@ if(memoEl){
 
     saveData();
     renderPersonalAssignments();
-
+     renderSideOverview(); // ★追加（提出率・一覧も更新）
+     
     // 一覧表示中なら提出率カードも更新
     const overview = document.getElementById("viewOverview");
     if(overview && overview.style.display !== "none"){
@@ -541,11 +542,47 @@ renderAssignPhotoGrid(student, assignId);
 }
 
 
-function bindViewButtons(){
-  const bP = document.getElementById("btnViewPersonal");
-  const bO = document.getElementById("btnViewOverview");
-  if(bP) bP.onclick = ()=> setView("personal");
-  if(bO) bO.onclick = ()=> setView("overview");
+function openSideDrawer(){
+  const d = document.getElementById("sideDrawer");
+  const o = document.getElementById("drawerOverlay");
+  if(!d || !o) return;
+
+  d.classList.add("isOpen");
+  o.classList.add("isOpen");
+  d.setAttribute("aria-hidden", "false");
+  o.setAttribute("aria-hidden", "false");
+
+  // ★開いたタイミングでサイド一覧を描画
+  renderSideOverview();
+}
+
+function closeSideDrawer(){
+  const d = document.getElementById("sideDrawer");
+  const o = document.getElementById("drawerOverlay");
+  if(!d || !o) return;
+
+  d.classList.remove("isOpen");
+  o.classList.remove("isOpen");
+  d.setAttribute("aria-hidden", "true");
+  o.setAttribute("aria-hidden", "true");
+}
+
+function bindSideDrawer(){
+  const openBtn = document.getElementById("btnToggleSide");
+  const closeBtn = document.getElementById("btnCloseSide");
+  const overlay = document.getElementById("drawerOverlay");
+
+  if(openBtn) openBtn.onclick = openSideDrawer;
+  if(closeBtn) closeBtn.onclick = closeSideDrawer;
+  if(overlay) overlay.onclick = closeSideDrawer;
+
+  // ESCで閉じる
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){
+      const d = document.getElementById("sideDrawer");
+      if(d && d.classList.contains("isOpen")) closeSideDrawer();
+    }
+  });
 }
 
 /* ====================================================
@@ -577,7 +614,7 @@ function renderStudentSelect(){
     updateStepCount();
 
    renderPersonalAssignments(); // ★追加：個人の提出物表示も児童に合わせて更新
-
+   renderSideOverview(); // ★追加（児童切替に追従）
     saveData();
   };
 }
@@ -699,6 +736,8 @@ function bindSteps(){
 
     saveData();
     renderSteps(); // 再描画で色とカウントが更新される
+   renderSteps(); // 既存
+renderSideOverview(); // ★追加（サイド一覧も更新）
   });
 
   // 全解除
@@ -1104,6 +1143,190 @@ function renderOverviewAssignments(){
   table.appendChild(wrap);
 }
 
+function renderSideOverview(){
+  renderSideOverviewSteps();
+  renderSideOverviewAssignments();
+}
+
+function renderSideOverviewSteps(){
+  const host = document.getElementById("sideOverviewSteps");
+  if(!host) return;
+
+  const wrap = document.createElement("div");
+  wrap.style.display = "grid";
+  wrap.style.gap = "8px";
+
+  state.data.students.forEach(name=>{
+    ensureStudent(name);
+
+    const arr = state.data.stepsByStudent[name] || [];
+    const done = arr.filter(Boolean).length;
+
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "btn";
+    row.style.textAlign = "left";
+    row.style.display = "grid";
+    row.style.gridTemplateColumns = "1fr auto";
+    row.style.alignItems = "center";
+    row.style.gap = "10px";
+    row.style.padding = "12px";
+
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <div style="font-weight:800">${name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">${done}/12 完了</div>
+    `;
+
+    const right = document.createElement("div");
+    right.className = "badge";
+    right.textContent = `${done}/12`;
+
+    row.onclick = ()=>{
+      state.currentStudent = name;
+      saveData();
+
+      renderStudentSelect();
+      renderGroupUI();
+      renderSteps();
+      renderPersonalAssignments();
+
+      // ここで閉じると気持ちいい
+      closeSideDrawer();
+    };
+
+    row.appendChild(left);
+    row.appendChild(right);
+    wrap.appendChild(row);
+  });
+
+  host.innerHTML = "";
+  host.appendChild(wrap);
+}
+
+function renderSideOverviewAssignments(){
+  const sel   = document.getElementById("sideOverviewAssignSelect");
+  const badge = document.getElementById("sideOverviewAssignRateBadge");
+  const table = document.getElementById("sideOverviewAssignTable");
+  if(!sel || !badge || !table) return;
+
+  // サイド側の ← → ボタン
+  const prevBtn = document.getElementById("btnSideOverviewPrevAssign");
+  const nextBtn = document.getElementById("btnSideOverviewNextAssign");
+
+  const assigns = getAssignments();
+  sel.innerHTML = "";
+
+  assigns.forEach(a=>{
+    const o = document.createElement("option");
+    o.value = a.id;
+    o.textContent = a.title;
+    sel.appendChild(o);
+  });
+
+  if(assigns.length === 0){
+    badge.textContent = "提出率 -/-（-%）";
+    table.innerHTML = `<div class="small">提出物がありません。</div>`;
+    return;
+  }
+
+  // currentAssignId を使い回し
+  if(!state.currentAssignId || !assigns.some(a=>a.id===state.currentAssignId)){
+    state.currentAssignId = assigns[0].id;
+  }
+  sel.value = state.currentAssignId;
+
+  sel.onchange = ()=>{
+    state.currentAssignId = sel.value;
+    saveData();
+    renderSideOverviewAssignments();
+  };
+
+  if(prevBtn){
+    prevBtn.onclick = ()=>{
+      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
+      const nextIdx = (idx <= 0) ? assigns.length - 1 : idx - 1;
+      state.currentAssignId = assigns[nextIdx].id;
+      saveData();
+      renderSideOverviewAssignments();
+    };
+  }
+  if(nextBtn){
+    nextBtn.onclick = ()=>{
+      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
+      const nextIdx = (idx >= assigns.length - 1) ? 0 : idx + 1;
+      state.currentAssignId = assigns[nextIdx].id;
+      saveData();
+      renderSideOverviewAssignments();
+    };
+  }
+
+  const assignId = state.currentAssignId;
+
+  let submittedCount = 0;
+  const total = state.data.students.length;
+
+  state.data.students.forEach(name=>{
+    ensureStudent(name);
+    const st = state.data.assignStatusByStudent?.[name]?.[assignId];
+    if(st && st.submitted) submittedCount += 1;
+  });
+
+  const rate = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
+  badge.textContent = `提出率 ${submittedCount}/${total}（${rate}%）`;
+
+  const wrap = document.createElement("div");
+  wrap.style.display = "grid";
+  wrap.style.gap = "8px";
+
+  state.data.students.forEach(name=>{
+    ensureStudent(name);
+    const st = state.data.assignStatusByStudent?.[name]?.[assignId];
+    const submitted = !!(st && st.submitted);
+
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "btn";
+    row.style.textAlign = "left";
+    row.style.display = "grid";
+    row.style.gridTemplateColumns = "1fr auto";
+    row.style.alignItems = "center";
+    row.style.gap = "10px";
+    row.style.padding = "12px";
+
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <div style="font-weight:800">${name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">
+        ${submitted ? "提出：済" : "提出：未"}
+      </div>
+    `;
+
+    const right = document.createElement("div");
+    right.className = "badge";
+    right.textContent = submitted ? "✅" : "—";
+
+    row.onclick = ()=>{
+      state.currentStudent = name;
+      saveData();
+
+      renderStudentSelect();
+      renderGroupUI();
+      renderSteps();
+      renderPersonalAssignments();
+
+      closeSideDrawer();
+    };
+
+    row.appendChild(left);
+    row.appendChild(right);
+    wrap.appendChild(row);
+  });
+
+  table.innerHTML = "";
+  table.appendChild(wrap);
+}
+
 /* ====================================================
    15) 名簿：追加 / 削除
 ==================================================== */
@@ -1128,6 +1351,8 @@ function bindRosterButtons(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
+      renderPersonalAssignments(); // ←もし入れてるなら
+      renderSideOverview();        // ★追加
 
       // 一覧を開いている最中なら一覧も更新
       //（今は個人操作が多いので省略してもOK）
@@ -1335,6 +1560,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindSteps();
   bindStepEditor();
   bindViewButtons();
+  bindSideDrawer(); // ★追加
 
   // 初期表示は個人
   setView("personal");
