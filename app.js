@@ -607,7 +607,6 @@ function renderStudentSelect(){
     renderGroupUI();
     renderSteps();
     updateStepCount();
-    renderPersonalAssignments();
     renderSideOverview();
 
     saveData();
@@ -978,7 +977,6 @@ function renderOverviewSteps(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
-      renderPersonalAssignments();
       setView("personal");
     };
     tr.appendChild(tdName);
@@ -1578,7 +1576,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderStudentSelect();
   renderGroupUI();
   renderSteps();
-  renderPersonalAssignments(); // ★追加（Step B）
 
   // bind
   bindRosterButtons();
