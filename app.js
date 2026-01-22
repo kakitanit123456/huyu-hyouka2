@@ -1628,7 +1628,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindSideDrawer();
 
   // 初期表示はメイン画面
-  setView("main");
+  setScreen("main");
   setView("personal");
 
   // Export / Import / Reset
