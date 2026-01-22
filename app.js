@@ -1479,12 +1479,17 @@ function renderPersonalPhotos(stName, assignId){
 }
 
 function renderPersonalAssignments(){
-  const sel = document.getElementById("personalAssignSelect");
-  const badge = document.getElementById("personalAssignBadge");
-  const memo = document.getElementById("personalAssignMemo");
-  const btnToggle = document.getElementById("btnToggleSubmitted");
+  const sel = $("personalAssignSelect", "personalAssignmentSelect", "personalAssign"); // ←代替候補
+  const badge = $("personalAssignBadge", "personalAssignmentBadge");
+  const memo = $("personalAssignMemo", "personalAssignmentMemo");
+  const btnToggle = $("btnToggleSubmitted", "btnToggleSubmit", "btnPersonalToggleSubmitted");
 
-  if(!sel || !badge || !memo || !btnToggle) return;
+  if(!sel || !badge || !memo || !btnToggle){
+    console.warn("personal assignment UI missing:", {
+      sel: !!sel, badge: !!badge, memo: !!memo, btnToggle: !!btnToggle
+    });
+    return;
+  }
 
   ensureStudent(state.currentStudent);
 
@@ -1888,6 +1893,19 @@ renderPersonalAssignments();
   setScreen("main");
   setView("personal");
 
+
+
+   //一時的なもの（コンソールチェック）
+   console.log("[check personal ids]", {
+  personalAssignSelect: !!document.getElementById("personalAssignSelect"),
+  personalAssignBadge: !!document.getElementById("personalAssignBadge"),
+  personalAssignMemo: !!document.getElementById("personalAssignMemo"),
+  btnToggleSubmitted: !!document.getElementById("btnToggleSubmitted"),
+  btnPersonalPrevAssign: !!document.getElementById("btnPersonalPrevAssign"),
+  btnPersonalNextAssign: !!document.getElementById("btnPersonalNextAssign"),
+  personalPhotoArea: !!document.getElementById("personalPhotoArea"),
+});
+   
   // Export / Import / Reset
   const exBtn = document.getElementById("btnExport");
   if(exBtn) exBtn.onclick = exportData;
