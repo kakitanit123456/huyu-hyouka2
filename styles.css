@@ -184,26 +184,36 @@ textarea{min-height:84px; resize:vertical}
 }
 
 /* ===========================
-   一覧（マトリクス表）最終定義
+   一覧（マトリクス表）最終定義：これだけ残す
    =========================== */
 
+/* 画面全体が横に広がらない保険 */
+body{
+  overflow-x: hidden;
+}
+
+/* 表を横スクロールさせる箱（ここだけが横スクロール） */
 .matrixWrap{
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  width: 100%;
   max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--card);
 }
 
+/* テーブル本体：列数で横に伸びる */
 .matrixTable{
-  border-collapse: separate;
+  border-collapse: separate; /* stickyのため */
   border-spacing: 0;
-  width: max-content;   /* ← 列数で横に伸びる */
-  min-width: 100%;
+  width: max-content;        /* 列が増えたら横に伸びる */
+  min-width: 100%;           /* 少ないときはカード幅まで広がる */
   table-layout: auto;
 }
 
+/* セル共通 */
 .matrixTable th,
 .matrixTable td{
   padding: 10px 12px;
@@ -211,30 +221,32 @@ textarea{min-height:84px; resize:vertical}
   white-space: nowrap;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: var(--card);
+  background: var(--card);   /* sticky透け防止 */
 }
 
 /* 上ヘッダ固定 */
 .matrixTable thead th{
   position: sticky;
   top: 0;
-  z-index: 3;
-  font-weight: 800;
-}
-
-/* 左列（児童）固定 */
-.matrixTable th:first-child,
-.matrixTable td:first-child{
-  position: sticky;
-  left: 0;
-  z-index: 2;
+  z-index: 5;
   font-weight: 800;
   background: var(--card);
 }
 
-/* 左上セル最前面 */
+/* 左列固定（Safari対策で thead/tbody を明示） */
+.matrixTable thead th:first-child,
+.matrixTable tbody td:first-child{
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  font-weight: 800;
+  background: var(--card);
+  box-shadow: 2px 0 0 rgba(255,255,255,0.06); /* 境界を見やすく */
+}
+
+/* 左上セルを最前面 */
 .matrixTable thead th:first-child{
-  z-index: 4;
+  z-index: 7;
 }
 
 /* 右端・下端の線を消す */
@@ -242,6 +254,17 @@ textarea{min-height:84px; resize:vertical}
 .matrixTable td:last-child{
   border-right: none;
 }
-.matrixTable tr:last-child td{
+.matrixTable tbody tr:last-child td{
   border-bottom: none;
+}
+/* ★ページが横に広がらないようにする（表は中だけスクロール） */
+.matrixWrap{
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+
+/* ついでに保険：画面全体の横スクロールを消す */
+body{
+  overflow-x: hidden;
 }
