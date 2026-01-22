@@ -78,84 +78,7 @@ const defaultData = {
   assignStatusByStudent: {}
 };
 
-function bindAssignmentButtons(){
-  const addBtn = document.getElementById("btnAddAssign");
-  const input  = document.getElementById("newAssignTitle");
-  const listEl = document.getElementById("assignManagerList");
 
-  if(!addBtn || !input) return;
-
-  addBtn.onclick = ()=>{
-    const title = (input.value || "").trim();
-    if(!title) return alert("提出物名を入力してください。");
-
-    // 新しいIDを作る
-    const id = "a" + Date.now().toString(36);
-
-    state.data.assignments.push({ id, title });
-     // ★ 追加した提出物を即選択
-state.currentAssignId = id;
-
-    // 既存児童全員に提出状況を補完
-    state.data.students.forEach(name=>{
-      ensureStudent(name);
-      state.data.assignStatusByStudent[name][id] = {
-        submitted:false,
-        memo:"",
-        photos:["","",""]
-      };
-    });
-
-    input.value = "";
-    saveData();
-
-    // 再描画
-    renderPersonalAssignments();
-    renderOverviewAssignments();
-    renderSideOverview(true);
-    renderAssignmentManager();
-  };
-}
-
-function renderAssignmentManager(){
-  const list = document.getElementById("assignManagerList");
-  if(!list) return;
-
-  list.innerHTML = "";
-
-  getAssignments().forEach(a=>{
-    const row = document.createElement("div");
-    row.className = "row";
-
-    const span = document.createElement("span");
-    span.textContent = a.title;
-
-    const del = document.createElement("button");
-    del.className = "btn danger";
-    del.textContent = "削除";
-    del.onclick = ()=>{
-      if(!confirm(`「${a.title}」を削除しますか？`)) return;
-
-      state.data.assignments =
-        state.data.assignments.filter(x => x.id !== a.id);
-
-      // 提出状況も削除
-      state.data.students.forEach(name=>{
-        delete state.data.assignStatusByStudent[name][a.id];
-      });
-
-      saveData();
-      renderAssignmentManager();
-      renderPersonalAssignments();
-      renderOverviewAssignments();
-      renderSideOverview(true);
-    };
-
-    row.appendChild(span);
-    row.appendChild(del);
-    list.appendChild(row);
-  });
-}
 
 /* =========================
    4) util
@@ -1293,118 +1216,120 @@ function renderOverviewSteps(){
 ==================================================== */
 
 function renderOverviewAssignments(){
-  const badge = document.getElementById("overviewAssignRateBadge");
-  const table = document.getElementById("overviewAssignTable");
-  if(!sel || !badge || !table) return;
-
-  initOverviewAssignments();
+  const badgeHost = document.getElementById("overviewAssignRateBadge");
+  const tableHost = document.getElementById("overviewAssignTable");
+  if(!badgeHost || !tableHost) return;
 
   const assigns = getAssignments();
-  
-  if(state.currentAssignId){
-    sel.value = state.currentAssignId;
+  if(assigns.length === 0){
+    badgeHost.textContent = "提出物 0件";
+    tableHost.innerHTML = `<div class="small">提出物がありません。</div>`;
+    return;
   }
 
-  //←・→ボタン
+  // 全体の提出率（全提出物合計でざっくり）
+  let submittedAll = 0;
+  let totalAll = 0;
 
-  if(prevBtn){
-    prevBtn.onclick = ()=>{
-      if(assigns.length === 0) return;
-      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
-      const nextIdx = (idx <= 0) ? assigns.length - 1 : idx - 1;
-      state.currentAssignId = assigns[nextIdx].id;
-      saveData();
-      renderOverviewAssignments();
-    };
-  }
-
-  if(nextBtn){
-    nextBtn.onclick = ()=>{
-      if(assigns.length === 0) return;
-      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
-      const nextIdx = (idx >= assigns.length - 1) ? 0 : idx + 1;
-      state.currentAssignId = assigns[nextIdx].id;
-      saveData();
-      renderOverviewAssignments();
-    };
-  }
-
-  let submittedCount = 0;
-  const total = state.data.students.length;
-
-  state.data.students.forEach(name=>{
-    ensureStudent(name);
-    const st = state.data.assignStatusByStudent?.[name]?.[assignId];
-    if(st && st.submitted) submittedCount += 1;
+  state.data.students.forEach(stName=>{
+    ensureStudent(stName);
+    assigns.forEach(a=>{
+      totalAll += 1;
+      const st = state.data.assignStatusByStudent?.[stName]?.[a.id];
+      if(st && st.submitted) submittedAll += 1;
+    });
   });
 
-  const rate = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
-  badge.textContent = `提出率 ${submittedCount}/${total}（${rate}%）`;
+  const rateAll = totalAll > 0 ? Math.round((submittedAll / totalAll) * 100) : 0;
+  badgeHost.textContent = `全体提出率 ${submittedAll}/${totalAll}（${rateAll}%）`;
 
-  // 表（児童ごとの提出状況）→ 表形式（未提出を赤で強調）
-const outer = document.createElement("div");
-outer.className = "matrixWrap";
+  // マトリクス表（児童×提出物）
+  const outer = document.createElement("div");
+  outer.className = "matrixWrap";
 
-const t = document.createElement("table");
-t.className = "matrixTable";
+  const t = document.createElement("table");
+  t.className = "matrixTable";
 
-// ヘッダ
-const thead = document.createElement("thead");
-const trh = document.createElement("tr");
+  // ヘッダ
+  const thead = document.createElement("thead");
+  const trh = document.createElement("tr");
 
-const thName = document.createElement("th");
-thName.textContent = "児童";
-trh.appendChild(thName);
+  const th0 = document.createElement("th");
+  th0.textContent = "児童";
+  trh.appendChild(th0);
 
-const thAssign = document.createElement("th");
-thAssign.textContent = getAssignTitle(assignId);
-trh.appendChild(thAssign);
+  assigns.forEach(a=>{
+    const th = document.createElement("th");
+    th.textContent = a.title;
+    th.title = a.id;
+    trh.appendChild(th);
+  });
 
-thead.appendChild(trh);
-t.appendChild(thead);
+  thead.appendChild(trh);
+  t.appendChild(thead);
 
-// 本体
-const tbody = document.createElement("tbody");
+  // 本体
+  const tbody = document.createElement("tbody");
 
-state.data.students.forEach(name=>{
-  ensureStudent(name);
-  const st = state.data.assignStatusByStudent?.[name]?.[assignId];
-  const submitted = !!(st && st.submitted);
+  state.data.students.forEach(stName=>{
+    ensureStudent(stName);
 
-  const tr = document.createElement("tr");
+    const tr = document.createElement("tr");
 
-  const tdName = document.createElement("td");
-  tdName.textContent = name;
-  tdName.style.cursor = "pointer";
-  tdName.onclick = ()=>{
-    state.currentStudent = name;
-    saveData();
-    renderStudentSelect();
-    renderGroupUI();
-    renderSteps();
-    renderPersonalAssignments();
-    setView("personal");
-  };
-  tr.appendChild(tdName);
+    // 名前（クリックで個人へ）
+    const tdName = document.createElement("td");
+    tdName.textContent = stName;
+    tdName.style.cursor = "pointer";
+    tdName.title = "クリックでこの児童に切替";
+    tdName.onclick = ()=>{
+      state.currentStudent = stName;
+      saveData();
+      renderStudentSelect();
+      renderGroupUI();
+      renderSteps();
+      renderPersonalAssignments();
+      setView("personal");
+    };
+    tr.appendChild(tdName);
 
-  const tdStatus = document.createElement("td");
-  tdStatus.className = "cellAssign " + (submitted ? "isSubmitted" : "isMissing");
-  tdStatus.textContent = submitted ? "提出済" : "未提出";
-  tdStatus.style.cursor = "pointer";
-  tdStatus.onclick = ()=> tdName.onclick();
-  tr.appendChild(tdStatus);
+    // 各提出物セル
+    assigns.forEach(a=>{
+      const st = state.data.assignStatusByStudent?.[stName]?.[a.id];
+      const submitted = !!(st && st.submitted);
 
-  tbody.appendChild(tr);
-});
+      const td = document.createElement("td");
+      td.className = "cellAssign " + (submitted ? "isSubmitted" : "isMissing");
+      td.textContent = submitted ? "提出済" : "未提出";
+      td.style.cursor = "pointer";
 
-t.appendChild(tbody);
-outer.appendChild(t);
+      // クリックでその児童に切替＋その提出物を個人で選択
+      td.onclick = ()=>{
+        state.currentStudent = stName;
+        state.currentAssignId = a.id;   // ←ここが重要
+        saveData();
 
-table.innerHTML = "";
-table.appendChild(outer);
-  renderAssignManager(); // ★追加：提出物の編集/削除一覧を描画
+        renderStudentSelect();
+        renderGroupUI();
+        renderSteps();
+        renderPersonalAssignments();
+        setView("personal");
+      };
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  t.appendChild(tbody);
+  outer.appendChild(t);
+
+  tableHost.innerHTML = "";
+  tableHost.appendChild(outer);
+
+  // 提出物管理の表示（提出物設定画面にあるなら、ここで呼ぶのは任意）
+  // renderAssignManager();
 }
-
 
 function renderSideOverview(force = false){
   const d = document.getElementById("sideDrawer");
@@ -1482,15 +1407,16 @@ function renderSideOverviewAssignments(){
   const nextBtn = document.getElementById("btnSideOverviewNextAssign");
 
   const assigns = getAssignments();
+
   sel.innerHTML = "";
-
-  assigns.forEach(a=>{
-    const o = document.createElement("option");
-    o.value = a.id;
-    o.textContent = a.title;
-    sel.appendChild(o);
-  });
-
+assigns.forEach(a=>{
+  const o = document.createElement("option");
+  o.value = a.id;
+  o.textContent = a.title;
+  sel.appendChild(o);
+});
+sel.value = state.currentAssignId;
+   
   if(assigns.length === 0){
     badge.textContent = "提出率 -/-（-%）";
     table.innerHTML = `<div class="small">提出物がありません。</div>`;
@@ -1501,7 +1427,6 @@ function renderSideOverviewAssignments(){
   if(!state.currentAssignId || !assigns.some(a=>a.id===state.currentAssignId)){
     state.currentAssignId = assigns[0].id;
   }
-  sel.value = state.currentAssignId;
 
   sel.onchange = ()=>{
     state.currentAssignId = sel.value;
@@ -1592,92 +1517,6 @@ function renderSideOverviewAssignments(){
 
   table.innerHTML = "";
   table.appendChild(wrap);
-}
-
-/* ====================================================
-   ★提出物の管理：編集 / 削除（assignManagerList）
-==================================================== */
-function renderAssignManager(){
-  const host = document.getElementById("assignManagerList");
-  if(!host) return;
-
-  const assigns = getAssignments();
-  host.innerHTML = "";
-
-  assigns.forEach(a=>{
-    const row = document.createElement("div");
-    row.className = "row";
-    row.style.gap = "8px";
-
-    // タイトル入力
-    const inp = document.createElement("input");
-    inp.className = "grow";
-    inp.value = a.title;
-
-    // 保存
-    const saveBtn = document.createElement("button");
-    saveBtn.type = "button";
-    saveBtn.className = "btn";
-    saveBtn.textContent = "保存";
-
-    // 削除
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.className = "btn danger";
-    delBtn.textContent = "削除";
-
-    // 保存処理
-    saveBtn.onclick = ()=>{
-      const v = (inp.value || "").trim();
-      if(!v) return alert("タイトルを入力してください。");
-
-      a.title = v;
-      saveData();
-
-      // 画面を更新
-      renderPersonalAssignments();
-      renderOverviewAssignments();
-      renderSideOverview(true);
-    };
-
-    // 削除処理
-    delBtn.onclick = ()=>{
-      if(assigns.length <= 1){
-        return alert("提出物は最低1つ必要です。");
-      }
-      if(!confirm(`「${a.title}」を削除しますか？\n（各児童の提出状況・メモ・写真も削除）`)) return;
-
-      const delId = a.id;
-
-      // ①マスタから削除
-      state.data.assignments = assigns.filter(x => x.id !== delId);
-
-      // ②児童ごとの提出データも削除
-      state.data.students.forEach(s=>{
-        if(state.data.assignStatusByStudent?.[s]){
-          delete state.data.assignStatusByStudent[s][delId];
-        }
-      });
-
-      // ③選択中の提出物が消えたら先頭へ
-      const nextId = state.data.assignments[0]?.id || null;
-      if(state.currentAssignId === delId){
-        state.currentAssignId = nextId;
-      }
-
-      saveData();
-
-      // 画面を更新
-      renderPersonalAssignments();
-      renderOverviewAssignments();
-      renderSideOverview(true);
-    };
-
-    row.appendChild(inp);
-    row.appendChild(saveBtn);
-    row.appendChild(delBtn);
-    host.appendChild(row);
-  });
 }
 
 /* ====================================================
