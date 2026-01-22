@@ -1892,19 +1892,6 @@ renderPersonalAssignments();
   // 初期表示はメイン画面
   setScreen("main");
   setView("personal");
-
-
-
-   //一時的なもの（コンソールチェック）
-   console.log("[check personal ids]", {
-  personalAssignSelect: !!document.getElementById("personalAssignSelect"),
-  personalAssignBadge: !!document.getElementById("personalAssignBadge"),
-  personalAssignMemo: !!document.getElementById("personalAssignMemo"),
-  btnToggleSubmitted: !!document.getElementById("btnToggleSubmitted"),
-  btnPersonalPrevAssign: !!document.getElementById("btnPersonalPrevAssign"),
-  btnPersonalNextAssign: !!document.getElementById("btnPersonalNextAssign"),
-  personalPhotoArea: !!document.getElementById("personalPhotoArea"),
-});
    
   // Export / Import / Reset
   const exBtn = document.getElementById("btnExport");
