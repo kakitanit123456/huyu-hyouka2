@@ -238,145 +238,64 @@ textarea{min-height:84px; resize:vertical}
 }
 
 /* ===========================
-   一覧テーブル：ヘッダ＆左列固定
-   =========================== */
-
-/* 横スクロールの器（すでにmatrixWrapがある想定） */
-.matrixWrap{
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
-  border-radius: 12px;
-}
-
-/* テーブルの基本 */
-.matrixTable{
-  border-collapse: separate; /* stickyのため */
-  border-spacing: 0;
-  width: max-content;        /* 列が多い時に横スクロールしやすい */
-  min-width: 100%;           /* 少ない時は幅を広げる */
-}
-
-/* 共通：セルの背景（stickyが透けないように） */
-.matrixTable th,
-.matrixTable td{
-  background: var(--card);
-}
-
-/* ① 上ヘッダ固定 */
-.matrixTable thead th{
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: var(--card);
-}
-
-/* ② 左列（児童名）固定：th/td両方に効かせる */
-.matrixTable th:first-child,
-.matrixTable td:first-child{
-  position: sticky;
-  left: 0;
-  z-index: 4;
-  background: var(--card);
-  /* 右に境界線があると見やすい */
-  box-shadow: 2px 0 0 rgba(255,255,255,0.06);
-}
-
-/* ③ 左上（ヘッダ×左列）が最前面になるように */
-.matrixTable thead th:first-child{
-  z-index: 6;
-}
-
-/* ④ ついでに見やすさ（任意） */
-.matrixTable th,
-.matrixTable td{
-  padding: 10px 12px;
-  white-space: nowrap;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  border-right: 1px solid rgba(255,255,255,0.06);
-}
-
-.matrixTable tr:last-child td{
-  border-bottom: none;
-}
-
-.matrixTable th:last-child,
-
-/* 表を横スクロールさせる箱 */
-.matrixWrap{
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
-  border-radius: 12px;
-}
-
-/* テーブルは中身の幅に合わせて広がる */
-.matrixTable{
-  border-collapse: separate;
-  border-spacing: 0;
-  width: max-content;      /* ←これが効く */
-  min-width: 100%;         /* 画面より小さくはならない */
-  table-layout: auto;
-}
-
-/* ヘッダは折り返さない（横に広がるようにする） */
-.matrixTable th{
-  white-space: nowrap;
-}
-
-/* 1列目（児童）を固定したい場合の例（すでに実装済みなら不要） */
-.matrixTable th:first-child,
-.matrixTable td:first-child{
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--panel);
-}
-.matrixTable thead th{
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--panel);
-}
-
-/* ===========================
-   一覧表（マトリクス）調整
+   一覧（マトリクス表）最終定義
    =========================== */
 
 .matrixWrap{
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
+  border: 1px solid var(--line);
   border-radius: 12px;
+  background: var(--card);
 }
 
 .matrixTable{
   border-collapse: separate;
   border-spacing: 0;
-  width: max-content;
+  width: max-content;   /* ← 列数で横に伸びる */
   min-width: 100%;
   table-layout: auto;
 }
 
-.matrixTable th{
+.matrixTable th,
+.matrixTable td{
+  padding: 10px 12px;
+  font-size: 12px;
   white-space: nowrap;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
 }
 
-/* 児童列固定 */
+/* 上ヘッダ固定 */
+.matrixTable thead th{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  font-weight: 800;
+}
+
+/* 左列（児童）固定 */
 .matrixTable th:first-child,
 .matrixTable td:first-child{
   position: sticky;
   left: 0;
   z-index: 2;
-  background: var(--panel);
+  font-weight: 800;
+  background: var(--card);
 }
 
-.matrixTable thead th{
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--panel);
+/* 左上セル最前面 */
+.matrixTable thead th:first-child{
+  z-index: 4;
 }
+
+/* 右端・下端の線を消す */
+.matrixTable th:last-child,
 .matrixTable td:last-child{
   border-right: none;
+}
+.matrixTable tr:last-child td{
+  border-bottom: none;
 }
