@@ -162,22 +162,24 @@ function loadData(){
       d.assignments = safeClone(defaultData.assignments);
     }
 
-     // --- ★assignments のID重複を解消し、提出状況も引き継ぐ ---
+     // --- ★assignments のID重複を解消し、提出状況も「安全に」引き継ぐ ---
 {
   const used = new Set();
-  const oldToNew = {}; // 旧ID -> 新ID（変更があったものだけ）
+  const oldToNew = {}; // 旧ID -> 新ID（※「1回だけ変更」したものだけ）
 
   d.assignments = d.assignments.map(a=>{
     const oldId = String(a.id || "").trim();
+    const wasDuplicate = oldId && used.has(oldId); // ★ここが重要（同じoldIdが既に出てたら重複）
+
     let id = oldId || ("a_" + Math.random().toString(36).slice(2, 10));
 
     while(used.has(id)){
       id = "a_" + Math.random().toString(36).slice(2, 10);
     }
-
     used.add(id);
 
-    if(oldId && oldId !== id){
+    // ★重複由来の変更は「引き継ぎ対象にしない」（どれが正か判断不能のため）
+    if(oldId && oldId !== id && !wasDuplicate){
       oldToNew[oldId] = id;
     }
 
