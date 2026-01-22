@@ -540,6 +540,34 @@ function bindScreenButtons(){
    Step B：個人ビュー 提出物（提出：済/未）
 ==================================================== */
 
+function openSideDrawer(){
+  const d = document.getElementById("sideDrawer");
+  const o = document.getElementById("drawerOverlay");
+  if(!d || !o) return;
+
+  d.classList.add("isOpen");
+  o.classList.add("isOpen");
+  d.setAttribute("aria-hidden", "false");
+  o.setAttribute("aria-hidden", "false");
+
+  // 開いたタイミングで中身を描画（関数がある前提）
+  if(typeof renderSideOverview === "function"){
+    renderSideOverview(true);
+  }
+}
+
+function closeSideDrawer(){
+  const d = document.getElementById("sideDrawer");
+  const o = document.getElementById("drawerOverlay");
+  if(!d || !o) return;
+
+  d.classList.remove("isOpen");
+  o.classList.remove("isOpen");
+  d.setAttribute("aria-hidden", "true");
+  o.setAttribute("aria-hidden", "true");
+}
+
+
 function closeSideDrawer(){
   const d = document.getElementById("sideDrawer");
   const o = document.getElementById("drawerOverlay");
