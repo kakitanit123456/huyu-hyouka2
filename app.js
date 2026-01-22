@@ -1009,26 +1009,41 @@ function renderOverviewSteps(){
     };
     tr.appendChild(tdName);
 
-    // 12セル
-    for(let i=0;i<12;i++){
-      const td = document.createElement("td");
-      td.className = "cellStep " + (arr[i] ? "isDone" : "isTodo");
-      td.textContent = arr[i] ? "✓" : "";
-      td.title = labels[i] || "";
+    // 12セル（タップで完了/未完了を切替）
+for(let i=0;i<12;i++){
+  const td = document.createElement("td");
 
-      // セルクリックでも児童へ切替（見やすさ優先）
-      td.onclick = ()=>{
-        state.currentStudent = name;
-        saveData();
-        renderStudentSelect();
-        renderGroupUI();
-        renderSteps();
-        renderPersonalAssignments();
-        setView("personal");
-      };
+  const isDone = !!arr[i];
+  td.className = "cellStep " + (isDone ? "isDone" : "isTodo");
+  td.textContent = isDone ? "✓" : "";
+  td.title = labels[i] || "";
+  td.style.cursor = "pointer";
 
-      tr.appendChild(td);
+  // ★セルタップで ON/OFF を切り替える（画面遷移しない）
+  td.onclick = (ev)=>{
+    // （任意）ダブルクリックや選択防止したい時用
+    ev.preventDefault();
+
+    ensureStudent(name);
+
+    // 反転
+    state.data.stepsByStudent[name][i] = !state.data.stepsByStudent[name][i];
+
+    saveData();
+
+    // 一覧を即更新
+    renderOverviewSteps();
+
+    // もし今選択中の児童なら、個人側も同期更新
+    if(state.currentStudent === name){
+      renderSteps();
+      updateStepCount();
+      renderSideOverview(); // ドロワー開いてたら反映
     }
+  };
+
+  tr.appendChild(td);
+}
 
     tbody.appendChild(tr);
   });
