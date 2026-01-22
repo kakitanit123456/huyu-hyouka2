@@ -1629,6 +1629,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   // 初期表示はメイン画面
   setView("main");
+  setView("personal");
 
   // Export / Import / Reset
   const exBtn = document.getElementById("btnExport");
