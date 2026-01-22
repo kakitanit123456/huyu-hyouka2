@@ -77,7 +77,39 @@
 
     <div class="small" style="margin-top:8px">※このチェックは「個人管理」（グループ同期しない）</div>
     <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px"></div>
+<!-- ▼個人ビュー：提出物（B） -->
+<section class="card" id="personalAssignCard">
+  <div class="sec-title">
+    <h2>提出物（個人）</h2>
+    <div class="row" style="gap:8px">
+      <span class="badge" id="personalAssignBadge">—</span>
+    </div>
+  </div>
 
+  <div class="row" style="align-items:center">
+    <select id="personalAssignSelect" class="grow"></select>
+
+    <button type="button" class="btn" id="btnPersonalPrevAssign">◀</button>
+    <button type="button" class="btn" id="btnPersonalNextAssign">▶</button>
+
+    <button type="button" class="btn primary" id="btnToggleSubmitted">提出：未</button>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="grid" style="grid-template-columns: 1fr; gap:10px">
+    <div>
+      <div class="sub">メモ</div>
+      <textarea id="personalAssignMemo" placeholder="気づいたこと / 返却状況など"></textarea>
+    </div>
+
+    <div>
+      <div class="sub">写真（最大3枚）</div>
+      <div class="row" style="gap:10px; align-items:flex-start; flex-wrap:wrap" id="personalPhotoArea"></div>
+      <div class="hint">※端末内保存（localStorage）なので、写真を増やしすぎると容量上限に達します</div>
+    </div>
+  </div>
+</section>
     <!-- 提出物（提出：済/未） -->
 <div class="card" style="margin-top:12px">
   <div class="row" style="justify-content:space-between;align-items:center">
