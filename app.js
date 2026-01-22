@@ -1405,21 +1405,12 @@ function renderSideOverviewAssignments(){
   const table = document.getElementById("sideOverviewAssignTable");
   if(!sel || !badge || !table) return;
 
-  // サイド側の ← → ボタン
   const prevBtn = document.getElementById("btnSideOverviewPrevAssign");
   const nextBtn = document.getElementById("btnSideOverviewNextAssign");
 
   const assigns = getAssignments();
 
-  sel.innerHTML = "";
-assigns.forEach(a=>{
-  const o = document.createElement("option");
-  o.value = a.id;
-  o.textContent = a.title;
-  sel.appendChild(o);
-});
-  const assigns = getAssignments();
-
+  // 提出物が0件
   if(assigns.length === 0){
     sel.innerHTML = "";
     badge.textContent = "提出率 -/-（-%）";
@@ -1441,6 +1432,7 @@ assigns.forEach(a=>{
     sel.appendChild(o);
   });
   sel.value = state.currentAssignId;
+
   sel.onchange = ()=>{
     state.currentAssignId = sel.value;
     saveData();
@@ -1468,6 +1460,7 @@ assigns.forEach(a=>{
 
   const assignId = state.currentAssignId;
 
+  // 提出率
   let submittedCount = 0;
   const total = state.data.students.length;
 
@@ -1480,6 +1473,7 @@ assigns.forEach(a=>{
   const rate = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
   badge.textContent = `提出率 ${submittedCount}/${total}（${rate}%）`;
 
+  // 一覧
   const wrap = document.createElement("div");
   wrap.style.display = "grid";
   wrap.style.gap = "8px";
@@ -1514,12 +1508,10 @@ assigns.forEach(a=>{
     row.onclick = ()=>{
       state.currentStudent = name;
       saveData();
-
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
       renderPersonalAssignments();
-
       closeSideDrawer();
     };
 
