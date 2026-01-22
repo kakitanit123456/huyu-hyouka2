@@ -222,7 +222,13 @@ d.assignments.forEach(a=>{
 }
 
 function saveData(){
+   try{
+  if(!state || !state.data) return;
   localStorage.setItem(DATA_KEY, JSON.stringify(state.data));
+   }catch(e){
+    console.error(e);
+    alert("保存容量の上限を超えた可能性があります。\n写真を削除するか、提出物/児童数を減らしてください。");
+   }
 }
 
 /* =========================
