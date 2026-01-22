@@ -284,3 +284,40 @@ body{
   min-width: 120px;
   text-align: center;
 }
+
+/* ===== 個人ビュー：提出物（B） 写真UI ===== */
+.photoBox{
+  width: 140px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  background: var(--card2);
+  display: grid;
+  gap: 8px;
+}
+.photoThumb{
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.04);
+  overflow: hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.photoThumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display:block;
+}
+.photoActions{
+  display:flex;
+  gap: 6px;
+}
+.photoActions .btn{
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}
