@@ -186,26 +186,6 @@
   <button class="btn" id="btnOverviewNextAssign" type="button">→</button>
 </div>
 
-<!-- ★追加：提出物の管理（先生用） -->
-<div class="card" style="margin-top:12px">
-  <div class="row" style="justify-content:space-between;align-items:center">
-    <div style="font-size:13px;font-weight:800">提出物の管理</div>
-    <span class="badge">追加・編集・削除</span>
-  </div>
-
-  <div class="sub" style="margin-top:10px">新しい提出物を追加</div>
-  <div class="row">
-    <input id="newAssignTitle" class="grow" placeholder="例：実験レポート①" />
-    <button class="btn primary" id="btnAddAssign" type="button">追加</button>
-  </div>
-
-  <div class="sub" style="margin-top:12px">提出物一覧（編集/削除）</div>
-  <div id="assignManagerList" style="display:grid; gap:8px; margin-top:8px"></div>
-
-  <div class="small" style="margin-top:10px">
-    ※提出物を削除すると、その提出物に紐づく提出状況・写真も（今後）削除対象になります
-  </div>
-</div>
         <div id="overviewAssignTable" style="margin-top:10px"></div>
 
         <div class="small" style="margin-top:8px">
@@ -325,7 +305,29 @@
           <span class="hint">提出物の追加・編集・削除</span>
         </div>
         <div id="assignScreenBody" class="small">
-          （ここに提出物設定のUIを移動・追加していきます）
+          <div id="assignScreenBody" class="small">
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:800">提出物の管理</div>
+      <span class="badge">追加・編集・削除</span>
+    </div>
+
+    <div class="sub" style="margin-top:12px">新しい提出物を追加</div>
+    <div class="row">
+      <input id="newAssignTitle" class="grow" placeholder="例：実験レポート①" />
+      <button class="btn primary" id="btnAddAssign" type="button">追加</button>
+    </div>
+
+    <div class="sub" style="margin-top:12px">提出物一覧（編集 / 削除）</div>
+    <div id="assignManagerList" style="display:grid; gap:8px; margin-top:8px"></div>
+
+    <div class="small" style="margin-top:10px">
+      ※ここで追加・削除した提出物は、個人画面・一覧画面に自動で反映されます
+    </div>
+  </div>
+
+</div>
         </div>
       </div>
     </div>
