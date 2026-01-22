@@ -217,6 +217,12 @@ body{
 
   table-layout: fixed;  /* ★追加：列幅計算を安定させる（stickyが効きやすい） */
 }
+
+/* ★手順3：列幅の基準を作る（左列固定が見やすくなる） */
+.matrixTable th:first-child,
+.matrixTable td:first-child{
+  min-width: 140px;   /* ←児童名列の幅（好みで調整） */
+}
 /* セル共通 */
 .matrixTable th,
 .matrixTable td{
