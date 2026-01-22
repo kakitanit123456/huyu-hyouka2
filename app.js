@@ -1840,6 +1840,20 @@ document.addEventListener("DOMContentLoaded", ()=>{
   state.currentStudent = state.data.students[0];
   state.currentAssignId = state.data.assignments?.[0]?.id || null;
 
+   // ★★★ 提出物マスタの完全復旧（最重要） ★★★
+if(!Array.isArray(state.data.assignments) || state.data.assignments.length === 0){
+  console.warn("assignments missing → restore default");
+  state.data.assignments = safeClone(defaultData.assignments);
+}
+
+// ★選択中提出物IDを正規化
+if(
+  !state.currentAssignId ||
+  !state.data.assignments.some(a => a.id === state.currentAssignId)
+){
+  state.currentAssignId = state.data.assignments[0]?.id || null;
+}
+
 // ★保険：提出物マスタが空なら初期値に戻す
 if(!Array.isArray(state.data.assignments) || state.data.assignments.length === 0){
   state.data.assignments = safeClone(defaultData.assignments);
