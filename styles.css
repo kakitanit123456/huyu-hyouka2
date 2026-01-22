@@ -265,3 +265,23 @@ body{
 .matrixTable tbody tr:last-child td{
   border-bottom: none;
 }
+/* ===========================
+   ★任意：提出物表だけ列幅を自然にする
+   =========================== */
+.matrixTableAssign{
+  table-layout: auto;
+}
+
+/* ★手順4：進捗表（12時間）のセルサイズ（コンパクト） */
+.matrixTableSteps th:not(:first-child),
+.matrixTableSteps td:not(:first-child){
+  min-width: 44px;
+  text-align: center;
+}
+
+/* ★手順4：提出物表のセルサイズ（横長にして見やすく） */
+.matrixTableAssign th:not(:first-child),
+.matrixTableAssign td:not(:first-child){
+  min-width: 120px;
+  text-align: center;
+}
