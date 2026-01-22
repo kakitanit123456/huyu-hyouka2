@@ -197,8 +197,8 @@ body{
   width: 100%;
   max-width: 100%;
 
-  max-height: 55vh;          /* ★追加：表エリアの高さを固定（ここが重要） */
-  overflow: auto;            /* ★横も縦もこの枠の中だけでスクロール */
+  max-height: 55vh;   /* ★追加：この高さで固定（好きに調整OK） */
+  overflow: auto;     /* ★横も縦も“この枠の中だけ”スクロール */
 
   -webkit-overflow-scrolling: touch;
   border: 1px solid var(--line);
@@ -241,15 +241,13 @@ body{
 .matrixTable tbody td:first-child{
   position: sticky;
   left: 0;
-  z-index: 6;
-  font-weight: 800;
-  background: var(--card);
-  box-shadow: 2px 0 0 rgba(255,255,255,0.06); /* 境界を見やすく */
+  z-index: 10;               /* ★上げる */
+  background: var(--card);   /* ★必須：透け防止 */
+  box-shadow: 2px 0 0 rgba(255,255,255,0.06);
 }
 
-/* 左上セルを最前面 */
 .matrixTable thead th:first-child{
-  z-index: 7;
+  z-index: 11;               /* ★左上を最前面 */
 }
 
 /* 右端・下端の線を消す */
