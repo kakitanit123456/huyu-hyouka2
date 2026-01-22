@@ -1407,7 +1407,9 @@ function renderOverviewAssignments(){
 
   table.innerHTML = "";
   table.appendChild(wrap);
+  renderAssignManager(); // ★追加：提出物の編集/削除一覧を描画
 }
+
 
 function renderSideOverview(force = false){
   const d = document.getElementById("sideDrawer");
@@ -1595,6 +1597,92 @@ function renderSideOverviewAssignments(){
 
   table.innerHTML = "";
   table.appendChild(wrap);
+}
+
+/* ====================================================
+   ★提出物の管理：編集 / 削除（assignManagerList）
+==================================================== */
+function renderAssignManager(){
+  const host = document.getElementById("assignManagerList");
+  if(!host) return;
+
+  const assigns = getAssignments();
+  host.innerHTML = "";
+
+  assigns.forEach(a=>{
+    const row = document.createElement("div");
+    row.className = "row";
+    row.style.gap = "8px";
+
+    // タイトル入力
+    const inp = document.createElement("input");
+    inp.className = "grow";
+    inp.value = a.title;
+
+    // 保存
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "btn";
+    saveBtn.textContent = "保存";
+
+    // 削除
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "btn danger";
+    delBtn.textContent = "削除";
+
+    // 保存処理
+    saveBtn.onclick = ()=>{
+      const v = (inp.value || "").trim();
+      if(!v) return alert("タイトルを入力してください。");
+
+      a.title = v;
+      saveData();
+
+      // 画面を更新
+      renderPersonalAssignments();
+      renderOverviewAssignments();
+      renderSideOverview(true);
+    };
+
+    // 削除処理
+    delBtn.onclick = ()=>{
+      if(assigns.length <= 1){
+        return alert("提出物は最低1つ必要です。");
+      }
+      if(!confirm(`「${a.title}」を削除しますか？\n（各児童の提出状況・メモ・写真も削除）`)) return;
+
+      const delId = a.id;
+
+      // ①マスタから削除
+      state.data.assignments = assigns.filter(x => x.id !== delId);
+
+      // ②児童ごとの提出データも削除
+      state.data.students.forEach(s=>{
+        if(state.data.assignStatusByStudent?.[s]){
+          delete state.data.assignStatusByStudent[s][delId];
+        }
+      });
+
+      // ③選択中の提出物が消えたら先頭へ
+      const nextId = state.data.assignments[0]?.id || null;
+      if(state.currentAssignId === delId){
+        state.currentAssignId = nextId;
+      }
+
+      saveData();
+
+      // 画面を更新
+      renderPersonalAssignments();
+      renderOverviewAssignments();
+      renderSideOverview(true);
+    };
+
+    row.appendChild(inp);
+    row.appendChild(saveBtn);
+    row.appendChild(delBtn);
+    host.appendChild(row);
+  });
 }
 
 /* ====================================================
