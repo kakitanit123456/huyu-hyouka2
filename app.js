@@ -291,6 +291,136 @@ function getAssignTitle(assignId){
   return a ? a.title : "（不明）";
 }
 
+/* =========================
+   Assignments manager（追加・編集・削除）
+========================= */
+
+// 提出物IDを安全に作る（a_xxxxx）
+function makeAssignId(){
+  return "a_" + Math.random().toString(36).slice(2, 10);
+}
+
+// ある提出物IDを「全児童の提出状況」から消す（削除時に使う）
+function purgeAssignmentFromAllStudents(assignId){
+  // 児童側の提出状況から削除
+  if(state.data.assignStatusByStudent && typeof state.data.assignStatusByStudent === "object"){
+    state.data.students.forEach(stName=>{
+      if(state.data.assignStatusByStudent[stName] && typeof state.data.assignStatusByStudent[stName] === "object"){
+        delete state.data.assignStatusByStudent[stName][assignId];
+      }
+    });
+  }
+
+  // もし今選択中だったら、別の提出物に逃がす
+  if(state.currentAssignId === assignId){
+    const list = getAssignments();
+    state.currentAssignId = list[0]?.id || null;
+  }
+}
+
+// 「提出物の管理」UIの描画
+function renderAssignManager(){
+  const listHost = document.getElementById("assignManagerList");
+  if(!listHost) return;
+
+  const assigns = getAssignments();
+
+  listHost.innerHTML = "";
+
+  assigns.forEach(a=>{
+    const row = document.createElement("div");
+    row.className = "card";
+    row.style.padding = "10px";
+    row.style.display = "grid";
+    row.style.gridTemplateColumns = "1fr auto auto";
+    row.style.gap = "8px";
+    row.style.alignItems = "center";
+
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.value = a.title;
+    inp.placeholder = "提出物名";
+    inp.onchange = ()=>{
+      a.title = (inp.value || "").trim() || "（無題）";
+      saveData();
+      // 表示更新（セレクト等に反映）
+      renderPersonalAssignments();
+      renderOverviewAssignments();
+      renderSideOverview(true);
+      renderAssignManager();
+    };
+
+    const btnDel = document.createElement("button");
+    btnDel.type = "button";
+    btnDel.className = "btn danger";
+    btnDel.textContent = "削除";
+    btnDel.onclick = ()=>{
+      if(!confirm(`提出物「${a.title}」を削除しますか？\n（全児童の提出状況・メモ・写真も削除されます）`)) return;
+
+      // assignmentsから削除
+      state.data.assignments = assigns.filter(x => x.id !== a.id);
+
+      // 全児童の提出状況からも削除
+      purgeAssignmentFromAllStudents(a.id);
+
+      saveData();
+
+      // UI更新
+      renderPersonalAssignments();
+      renderOverviewAssignments();
+      renderSideOverview(true);
+      renderAssignManager();
+    };
+
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = a.id;
+
+    row.appendChild(inp);
+    row.appendChild(badge);
+    row.appendChild(btnDel);
+
+    listHost.appendChild(row);
+  });
+}
+
+// 「追加」ボタンなどのイベントを結びつける
+function bindAssignManager(){
+  const addBtn = document.getElementById("btnAddAssign");
+  const titleInp = document.getElementById("newAssignTitle");
+  if(!addBtn || !titleInp) return;
+
+  addBtn.onclick = ()=>{
+    const title = (titleInp.value || "").trim();
+    if(!title) return alert("提出物名を入力してください。");
+
+    // 追加
+    const id = makeAssignId();
+    state.data.assignments.push({ id, title });
+
+    // 全児童に提出物枠を作る
+    state.data.students.forEach(stName=>{
+      ensureStudent(stName);
+    });
+
+    // 追加したものを選択状態に
+    state.currentAssignId = id;
+
+    titleInp.value = "";
+    saveData();
+
+    // UI更新
+    renderPersonalAssignments();
+    renderOverviewAssignments();
+    renderSideOverview(true);
+    renderAssignManager();
+  };
+
+  titleInp.onkeydown = (e)=>{
+    if(e.key === "Enter") addBtn.click();
+  };
+}
+
 /* ====================================================
    8) View switch（個人 / 一覧）
 ==================================================== */
@@ -1641,6 +1771,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindViewButtons();
   bindScreenButtons(); // ★追加：画面切替ボタン
   bindSideDrawer();
+  bindAssignManager();
+  renderAssignManager();
 
   // 初期表示はメイン画面
   setScreen("main");
