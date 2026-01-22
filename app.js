@@ -357,6 +357,9 @@ function renderAssignManager(){
     btnDel.className = "btn danger";
     btnDel.textContent = "削除";
     btnDel.onclick = ()=>{
+             if(assigns.length <= 1){
+        return alert("提出物は最低1つ必要です。");
+      }
       if(!confirm(`提出物「${a.title}」を削除しますか？\n（全児童の提出状況・メモ・写真も削除されます）`)) return;
 
       // assignmentsから削除
@@ -1415,19 +1418,29 @@ assigns.forEach(a=>{
   o.textContent = a.title;
   sel.appendChild(o);
 });
-sel.value = state.currentAssignId;
-   
+  const assigns = getAssignments();
+
   if(assigns.length === 0){
+    sel.innerHTML = "";
     badge.textContent = "提出率 -/-（-%）";
     table.innerHTML = `<div class="small">提出物がありません。</div>`;
     return;
   }
 
-  // currentAssignId を使い回し
+  // currentAssignId を先に正規化
   if(!state.currentAssignId || !assigns.some(a=>a.id===state.currentAssignId)){
     state.currentAssignId = assigns[0].id;
   }
 
+  // セレクトを作る
+  sel.innerHTML = "";
+  assigns.forEach(a=>{
+    const o = document.createElement("option");
+    o.value = a.id;
+    o.textContent = a.title;
+    sel.appendChild(o);
+  });
+  sel.value = state.currentAssignId;
   sel.onchange = ()=>{
     state.currentAssignId = sel.value;
     saveData();
