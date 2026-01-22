@@ -314,6 +314,39 @@ function setView(mode){
   }
 }
 
+/* ====================================================
+   ★画面切替（メイン / 名簿設定 / 提出物設定）
+==================================================== */
+function setScreen(screen){
+  const main   = document.getElementById("screenMain");
+  const roster = document.getElementById("screenRoster");
+  const assign = document.getElementById("screenAssignments");
+  const back   = document.getElementById("btnBackMain");
+
+  if(!main || !roster || !assign) return;
+
+  main.style.display   = (screen === "main") ? "block" : "none";
+  roster.style.display = (screen === "roster") ? "block" : "none";
+  assign.style.display = (screen === "assignments") ? "block" : "none";
+
+  if(back){
+    back.style.display = (screen === "main") ? "none" : "inline-flex";
+  }
+
+  // （今は箱だけなので、ここでは何もしなくてOK）
+  // いずれここで renderRosterScreen() / renderAssignmentsScreen() を呼ぶ
+}
+
+function bindScreenButtons(){
+  const bR = document.getElementById("btnOpenRoster");
+  const bA = document.getElementById("btnOpenAssign");
+  const bB = document.getElementById("btnBackMain");
+
+  if(bR) bR.onclick = ()=> setScreen("roster");
+  if(bA) bA.onclick = ()=> setScreen("assignments");
+  if(bB) bB.onclick = ()=> setScreen("main");
+}
+
 function renderAssignPhotoGrid(student, assignId){
   const grid = document.getElementById("personalAssignPhotoGrid");
   if(!grid) return;
@@ -1591,10 +1624,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindSteps();
   bindStepEditor();
   bindViewButtons();
-  bindSideDrawer(); // ★追加
+  bindScreenButtons(); // ★追加：画面切替ボタン
+  bindSideDrawer();
 
-  // 初期表示は個人
-  setView("personal");
+  // 初期表示はメイン画面
+  setView("main");
 
   // Export / Import / Reset
   const exBtn = document.getElementById("btnExport");
