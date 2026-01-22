@@ -632,6 +632,7 @@ function renderStudentSelect(){
     renderGroupUI();
     renderSteps();
     updateStepCount();
+    renderPersonalAssignments();
     renderSideOverview();
 
     saveData();
@@ -1376,7 +1377,226 @@ function renderSideOverviewAssignments(){
   table.appendChild(wrap);
 }
 
-/* ====================================================
+/* =============/* ====================================================
+   Step B：個人ビュー 提出物（提出：済/未 + メモ + 写真3枚）
+==================================================== */
+
+function normalizePersonalAssignId(){
+  const assigns = getAssignments();
+  if(assigns.length === 0){
+    state.currentAssignId = null;
+    return null;
+  }
+  if(!state.currentAssignId || !assigns.some(a=>a.id === state.currentAssignId)){
+    state.currentAssignId = assigns[0].id;
+  }
+  return state.currentAssignId;
+}
+
+function renderPersonalPhotos(stName, assignId){
+  const host = document.getElementById("personalPhotoArea");
+  if(!host) return;
+
+  ensureStudent(stName);
+  const obj = state.data.assignStatusByStudent[stName][assignId];
+  const photos = Array.isArray(obj.photos) ? obj.photos : ["","",""];
+
+  host.innerHTML = "";
+
+  for(let i=0;i<3;i++){
+    const box = document.createElement("div");
+    box.className = "photoBox";
+
+    const thumb = document.createElement("div");
+    thumb.className = "photoThumb";
+
+    if(photos[i]){
+      const img = document.createElement("img");
+      img.src = photos[i];
+      img.alt = `photo${i+1}`;
+      thumb.appendChild(img);
+    }else{
+      thumb.innerHTML = `<div class="small" style="opacity:.7">画像なし</div>`;
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "photoActions";
+
+    const btnPick = document.createElement("button");
+    btnPick.type = "button";
+    btnPick.className = "btn";
+    btnPick.textContent = photos[i] ? "入替" : "追加";
+    btnPick.onclick = async ()=>{
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = async ()=>{
+        const file = input.files && input.files[0];
+        if(!file) return;
+
+        try{
+          const dataUrl = await readAsDataURL(file);
+          const resized = await resizeDataURL(dataUrl, 1280);
+          obj.photos[i] = resized;
+
+          saveData();
+          renderPersonalPhotos(stName, assignId);
+        }catch(e){
+          console.error(e);
+          alert("画像の読み込みに失敗しました。");
+        }
+      };
+      input.click();
+    };
+
+    const btnDel = document.createElement("button");
+    btnDel.type = "button";
+    btnDel.className = "btn danger";
+    btnDel.textContent = "削除";
+    btnDel.disabled = !photos[i];
+    btnDel.onclick = ()=>{
+      if(!photos[i]) return;
+      if(!confirm("この写真を削除しますか？")) return;
+      obj.photos[i] = "";
+      saveData();
+      renderPersonalPhotos(stName, assignId);
+    };
+
+    actions.appendChild(btnPick);
+    actions.appendChild(btnDel);
+
+    box.appendChild(thumb);
+    box.appendChild(actions);
+
+    host.appendChild(box);
+  }
+}
+
+function renderPersonalAssignments(){
+  const sel = document.getElementById("personalAssignSelect");
+  const badge = document.getElementById("personalAssignBadge");
+  const memo = document.getElementById("personalAssignMemo");
+  const btnToggle = document.getElementById("btnToggleSubmitted");
+
+  if(!sel || !badge || !memo || !btnToggle) return;
+
+  ensureStudent(state.currentStudent);
+
+  const assigns = getAssignments();
+  if(assigns.length === 0){
+    sel.innerHTML = "";
+    badge.textContent = "提出物 0件";
+    memo.value = "";
+    btnToggle.textContent = "提出：未";
+    btnToggle.classList.remove("primary");
+    const host = document.getElementById("personalPhotoArea");
+    if(host) host.innerHTML = "";
+    return;
+  }
+
+  const assignId = normalizePersonalAssignId();
+
+  sel.innerHTML = "";
+  assigns.forEach(a=>{
+    const o = document.createElement("option");
+    o.value = a.id;
+    o.textContent = a.title;
+    sel.appendChild(o);
+  });
+  sel.value = assignId;
+
+  const obj = state.data.assignStatusByStudent[state.currentStudent][assignId];
+
+  badge.textContent = obj.submitted ? "提出：済" : "提出：未";
+
+  btnToggle.textContent = obj.submitted ? "提出：済" : "提出：未";
+  btnToggle.classList.toggle("primary", obj.submitted);
+
+  memo.value = obj.memo || "";
+
+  renderPersonalPhotos(state.currentStudent, assignId);
+}
+
+function bindPersonalAssignments(){
+  const sel = document.getElementById("personalAssignSelect");
+  const memo = document.getElementById("personalAssignMemo");
+  const prevBtn = document.getElementById("btnPersonalPrevAssign");
+  const nextBtn = document.getElementById("btnPersonalNextAssign");
+  const btnToggle = document.getElementById("btnToggleSubmitted");
+
+  if(!sel || !memo || !btnToggle) return;
+
+  sel.onchange = ()=>{
+    state.currentAssignId = sel.value;
+    saveData();
+    renderPersonalAssignments();
+    renderSideOverview();
+  };
+
+  if(prevBtn){
+    prevBtn.onclick = ()=>{
+      const assigns = getAssignments();
+      if(assigns.length === 0) return;
+      normalizePersonalAssignId();
+
+      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
+      const nextIdx = (idx <= 0) ? assigns.length - 1 : idx - 1;
+      state.currentAssignId = assigns[nextIdx].id;
+      saveData();
+      renderPersonalAssignments();
+      renderSideOverview();
+    };
+  }
+
+  if(nextBtn){
+    nextBtn.onclick = ()=>{
+      const assigns = getAssignments();
+      if(assigns.length === 0) return;
+      normalizePersonalAssignId();
+
+      const idx = assigns.findIndex(a => a.id === state.currentAssignId);
+      const nextIdx = (idx >= assigns.length - 1) ? 0 : idx + 1;
+      state.currentAssignId = assigns[nextIdx].id;
+      saveData();
+      renderPersonalAssignments();
+      renderSideOverview();
+    };
+  }
+
+  btnToggle.onclick = ()=>{
+    const assigns = getAssignments();
+    if(assigns.length === 0) return;
+
+    normalizePersonalAssignId();
+    ensureStudent(state.currentStudent);
+
+    const obj = state.data.assignStatusByStudent[state.currentStudent][state.currentAssignId];
+    obj.submitted = !obj.submitted;
+
+    saveData();
+    renderPersonalAssignments();
+
+    renderSideOverview();
+
+    const overview = document.getElementById("viewOverview");
+    if(overview && overview.style.display !== "none"){
+      renderOverviewAssignments();
+    }
+  };
+
+  memo.onblur = ()=>{
+    const assigns = getAssignments();
+    if(assigns.length === 0) return;
+
+    normalizePersonalAssignId();
+    ensureStudent(state.currentStudent);
+
+    const obj = state.data.assignStatusByStudent[state.currentStudent][state.currentAssignId];
+    obj.memo = (memo.value || "");
+
+    saveData();
+  };
+}=======================================
    15) 名簿：追加 / 削除
 ==================================================== */
 function bindRosterButtons(){
@@ -1630,6 +1850,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindSideDrawer();
   bindAssignManager();
   renderAssignManager();
+   bindPersonalAssignments();
+renderPersonalAssignments();
 
   // 初期表示はメイン画面
   setScreen("main");
