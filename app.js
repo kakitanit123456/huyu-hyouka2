@@ -222,15 +222,20 @@ d.assignments.forEach(a=>{
 }
 
 function saveData(){
-   try{
-  if(!state || !state.data) return;
-  localStorage.setItem(DATA_KEY, JSON.stringify(state.data));
-   }catch(e){
+  try{
+    if(typeof state === "undefined" || !state || !state.data) return;
+    localStorage.setItem(DATA_KEY, JSON.stringify(state.data));
+  }catch(e){
     console.error(e);
-    alert("保存容量の上限を超えた可能性があります。\n写真を削除するか、提出物/児童数を減らしてください。");
-   }
+    // 容量系っぽいときだけ警告（ブラウザによりメッセージは違う）
+    const msg = String(e && (e.message || e.name) || "");
+    if(msg.includes("quota") || msg.includes("Quota") || msg.includes("QUOTA")){
+      alert("保存容量の上限を超えた可能性があります。\n写真を削除するか、提出物/児童数を減らしてください。");
+    }else{
+      alert("保存に失敗しました（原因はコンソールをご確認ください）。");
+    }
+  }
 }
-
 /* =========================
    6) state
 ========================= */
@@ -1700,7 +1705,9 @@ function doImportFromText(text){
     // ここで補完を確実にしたいので、一度保存→読み直しでもOK
     saveData();
     state.data = loadData();
-
+    if(!state.currentAssignId || !state.data.assignments?.some(a=>a.id===state.currentAssignId)){
+  state.currentAssignId = state.data.assignments?.[0]?.id || null;
+}
     state.currentStudent = state.data.students[0];
     state.data.students.forEach(n=> ensureStudent(n));
 
