@@ -564,18 +564,6 @@ function closeSideDrawer(){
   o.setAttribute("aria-hidden", "true");
 }
 
-
-function closeSideDrawer(){
-  const d = document.getElementById("sideDrawer");
-  const o = document.getElementById("drawerOverlay");
-  if(!d || !o) return;
-
-  d.classList.remove("isOpen");
-  o.classList.remove("isOpen");
-  d.setAttribute("aria-hidden", "true");
-  o.setAttribute("aria-hidden", "true");
-}
-
 function bindSideDrawer(){
   const openBtn = document.getElementById("btnToggleSide");
   const closeBtn = document.getElementById("btnCloseSide");
