@@ -1840,6 +1840,15 @@ document.addEventListener("DOMContentLoaded", ()=>{
   state.currentStudent = state.data.students[0];
   state.currentAssignId = state.data.assignments?.[0]?.id || null;
 
+// ★保険：提出物マスタが空なら初期値に戻す
+if(!Array.isArray(state.data.assignments) || state.data.assignments.length === 0){
+  state.data.assignments = safeClone(defaultData.assignments);
+}
+// ★保険：選択中の提出物IDを正規化
+if(!state.currentAssignId || !state.data.assignments.some(a=>a.id === state.currentAssignId)){
+  state.currentAssignId = state.data.assignments[0]?.id || null;
+}
+   
   // 児童データ補完
   state.data.students.forEach(n=> ensureStudent(n));
   saveData();
