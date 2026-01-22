@@ -1524,6 +1524,7 @@ function renderPersonalAssignments(){
 }
 
 function bindPersonalAssignments(){
+   console.log("bindPersonalAssignments OK"); // ★追加
   const sel = document.getElementById("personalAssignSelect");
   const memo = document.getElementById("personalAssignMemo");
   const prevBtn = document.getElementById("btnPersonalPrevAssign");
