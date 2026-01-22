@@ -82,7 +82,7 @@
   <div class="sec-title">
     <h2>提出物（個人）</h2>
     <div class="row" style="gap:8px">
-      <span class="badge" id="personalAssignBadge">—</span>
+      <span class="badge" id="personalAssignTitleBadge">—</span>
     </div>
   </div>
 
@@ -92,7 +92,7 @@
     <button type="button" class="btn" id="btnPersonalPrevAssign">◀</button>
     <button type="button" class="btn" id="btnPersonalNextAssign">▶</button>
 
-    <button type="button" class="btn primary" id="btnToggleSubmitted">提出：未</button>
+    <button type="button" class="btn primary" id="btnPersonalToggleSubmitted">提出：未</button>
   </div>
 
   <div class="hr"></div>
@@ -105,7 +105,9 @@
 
     <div>
       <div class="sub">写真（最大3枚）</div>
-      <div class="row" style="gap:10px; align-items:flex-start; flex-wrap:wrap" id="personalPhotoArea"></div>
+      <div class="row"
+     style="gap:10px; align-items:flex-start; flex-wrap:wrap"
+     id="personalPhotoRow"></div>
       <div class="hint">※端末内保存（localStorage）なので、写真を増やしすぎると容量上限に達します</div>
     </div>
   </div>
