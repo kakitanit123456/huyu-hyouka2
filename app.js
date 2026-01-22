@@ -93,6 +93,8 @@ function bindAssignmentButtons(){
     const id = "a" + Date.now().toString(36);
 
     state.data.assignments.push({ id, title });
+     // ★ 追加した提出物を即選択
+state.currentAssignId = id;
 
     // 既存児童全員に提出状況を補完
     state.data.students.forEach(name=>{
