@@ -398,7 +398,6 @@ function renderAssignManager(){
       a.title = (inp.value || "").trim() || "（無題）";
       saveData();
       // 表示更新（セレクト等に反映）
-      renderPersonalAssignments();
       renderOverviewAssignments();
       renderSideOverview(true);
       renderAssignManager();
@@ -423,7 +422,6 @@ function renderAssignManager(){
       saveData();
 
       // UI更新
-      renderPersonalAssignments();
       renderOverviewAssignments();
       renderSideOverview(true);
       renderAssignManager();
@@ -467,7 +465,6 @@ function bindAssignManager(){
     saveData();
 
     // UI更新
-    renderPersonalAssignments();
     renderOverviewAssignments();
     renderSideOverview(true);
     renderAssignManager();
@@ -1137,7 +1134,6 @@ function renderOverviewAssignments(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
-      renderPersonalAssignments();
       setView("personal");
     };
     tr.appendChild(tdName);
@@ -1161,7 +1157,6 @@ function renderOverviewAssignments(){
         renderStudentSelect();
         renderGroupUI();
         renderSteps();
-        renderPersonalAssignments();
         setView("personal");
       };
 
@@ -1231,7 +1226,6 @@ function renderSideOverviewSteps(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
-      renderPersonalAssignments();
 
       // ここで閉じると気持ちいい
       closeSideDrawer();
@@ -1358,7 +1352,6 @@ function renderSideOverviewAssignments(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
-      renderPersonalAssignments();
       closeSideDrawer();
     };
 
@@ -1395,7 +1388,6 @@ function bindRosterButtons(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
-      renderPersonalAssignments(); // ←もし入れてるなら
       renderSideOverview();        // ★追加
 
       // 一覧を開いている最中なら一覧も更新
@@ -1432,7 +1424,6 @@ function bindRosterButtons(){
       renderStudentSelect();
       renderGroupUI();
       renderSteps();
-      renderPersonalAssignments(); // ★追加（今の児童に合わせて提出UIを再構築）
       renderSideOverview();        // ★追加（ドロワー開いてたら追従）
     };
   }
@@ -1553,7 +1544,6 @@ function doImportFromText(text){
     renderStudentSelect();
     renderGroupUI();
     renderSteps();
-    renderPersonalAssignments();
     renderSideOverview(true); // サイドがあるなら
 
     alert("インポート完了！");
@@ -1577,7 +1567,6 @@ function resetAll(){
   renderStudentSelect();
   renderGroupUI();
   renderSteps();
-  renderPersonalAssignments(); // 提出物UIも再構築
 
   alert("全データを削除しました。");
 
