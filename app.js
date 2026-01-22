@@ -162,6 +162,45 @@ function loadData(){
       d.assignments = safeClone(defaultData.assignments);
     }
 
+     // --- ★assignments のID重複を解消し、提出状況も引き継ぐ ---
+{
+  const used = new Set();
+  const oldToNew = {}; // 旧ID -> 新ID（変更があったものだけ）
+
+  d.assignments = d.assignments.map(a=>{
+    const oldId = String(a.id || "").trim();
+    let id = oldId || ("a_" + Math.random().toString(36).slice(2, 10));
+
+    while(used.has(id)){
+      id = "a_" + Math.random().toString(36).slice(2, 10);
+    }
+
+    used.add(id);
+
+    if(oldId && oldId !== id){
+      oldToNew[oldId] = id;
+    }
+
+    return { id, title: a.title };
+  });
+
+  // 提出状況のキーを付け替え（旧IDがあれば新IDへ移す）
+  if(d.assignStatusByStudent && typeof d.assignStatusByStudent === "object"){
+    Object.keys(d.assignStatusByStudent).forEach(stName=>{
+      const stObj = d.assignStatusByStudent[stName];
+      if(!stObj || typeof stObj !== "object") return;
+
+      Object.keys(oldToNew).forEach(oldId=>{
+        const newId = oldToNew[oldId];
+        if(stObj[oldId] && !stObj[newId]){
+          stObj[newId] = stObj[oldId];
+        }
+        delete stObj[oldId];
+      });
+    });
+  }
+}
+
     // --- ★提出状況補完 ---
     if(!d.assignStatusByStudent || typeof d.assignStatusByStudent !== "object"){
       d.assignStatusByStudent = {};
@@ -1717,6 +1756,8 @@ function doImportFromText(text){
     renderStudentSelect();
     renderGroupUI();
     renderSteps();
+    renderPersonalAssignments();
+    renderSideOverview(true); // サイドがあるなら
 
     alert("インポート完了！");
   }catch(e){
