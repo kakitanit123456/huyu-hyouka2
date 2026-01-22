@@ -1096,7 +1096,7 @@ function renderOverviewAssignments(){
 
   const t = document.createElement("table");
   t.className = "matrixTable matrixTableAssign";table");
-  t.className = "matrixTable";
+  t.className = "matrixTable matrixTableAssign";
 
   // ヘッダ
   const thead = document.createElement("thead");
