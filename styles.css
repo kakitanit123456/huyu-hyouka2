@@ -196,8 +196,10 @@ body{
 .matrixWrap{
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
+
+  max-height: 55vh;          /* ★追加：表エリアの高さを固定（ここが重要） */
+  overflow: auto;            /* ★横も縦もこの枠の中だけでスクロール */
+
   -webkit-overflow-scrolling: touch;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -206,13 +208,14 @@ body{
 
 /* テーブル本体：列数で横に伸びる */
 .matrixTable{
-  border-collapse: separate; /* stickyのため */
+  border-collapse: separate;
   border-spacing: 0;
-  width: max-content;        /* 列が増えたら横に伸びる */
-  min-width: 100%;           /* 少ないときはカード幅まで広がる */
-  table-layout: auto;
-}
 
+  width: max-content;   /* 列が増えたら横に伸びる */
+  min-width: 100%;      /* 少ないときは枠いっぱい */
+
+  table-layout: fixed;  /* ★追加：列幅計算を安定させる（stickyが効きやすい） */
+}
 /* セル共通 */
 .matrixTable th,
 .matrixTable td{
