@@ -631,35 +631,49 @@ function bindSideDrawer(){
 /* ====================================================
    9) 名簿UI
 ==================================================== */
-function renderStudentSelect(){
-  const sel = document.getElementById("studentSelect");
-  if(!sel) return;
 
-  sel.innerHTML = "";
-  state.data.students.forEach(name=>{
-    const o = document.createElement("option");
-    o.value = name;
-    o.textContent = name;
-    sel.appendChild(o);
+function renderStudentSelect(){
+  const selMain   = document.getElementById("studentSelect");        // main用
+  const selRoster = document.getElementById("rosterStudentSelect");  // roster用
+
+  const sels = [selMain, selRoster].filter(Boolean);
+  if(sels.length === 0) return;
+
+  // options を両方に生成
+  sels.forEach(sel=>{
+    sel.innerHTML = "";
+    state.data.students.forEach(name=>{
+      const o = document.createElement("option");
+      o.value = name;
+      o.textContent = name;
+      sel.appendChild(o);
+    });
   });
 
   if(!state.currentStudent) state.currentStudent = state.data.students[0];
   if(!state.data.students.includes(state.currentStudent)) state.currentStudent = state.data.students[0];
 
-  sel.value = state.currentStudent;
+  // 選択値を同期
+  sels.forEach(sel=> sel.value = state.currentStudent);
 
-  sel.onchange = ()=>{
-    state.currentStudent = sel.value;
+  const onChange = (value)=>{
+    state.currentStudent = value;
     ensureStudent(state.currentStudent);
+
+    if(selMain) selMain.value = state.currentStudent;
+    if(selRoster) selRoster.value = state.currentStudent;
 
     renderGroupUI();
     renderSteps();
     updateStepCount();
+    renderPersonalAssignments();
+    renderSideOverview();
 
-   renderPersonalAssignments(); // ★追加：個人の提出物表示も児童に合わせて更新
-   renderSideOverview(); // ★追加（児童切替に追従）
     saveData();
   };
+
+  if(selMain) selMain.onchange = ()=> onChange(selMain.value);
+  if(selRoster) selRoster.onchange = ()=> onChange(selRoster.value);
 }
 
 /* ====================================================
