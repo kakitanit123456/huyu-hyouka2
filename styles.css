@@ -301,6 +301,82 @@ textarea{min-height:84px; resize:vertical}
 }
 
 .matrixTable th:last-child,
+
+/* 表を横スクロールさせる箱 */
+.matrixWrap{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+/* テーブルは中身の幅に合わせて広がる */
+.matrixTable{
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;      /* ←これが効く */
+  min-width: 100%;         /* 画面より小さくはならない */
+  table-layout: auto;
+}
+
+/* ヘッダは折り返さない（横に広がるようにする） */
+.matrixTable th{
+  white-space: nowrap;
+}
+
+/* 1列目（児童）を固定したい場合の例（すでに実装済みなら不要） */
+.matrixTable th:first-child,
+.matrixTable td:first-child{
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--panel);
+}
+.matrixTable thead th{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--panel);
+}
+
+/* ===========================
+   一覧表（マトリクス）調整
+   =========================== */
+
+.matrixWrap{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.matrixTable{
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+.matrixTable th{
+  white-space: nowrap;
+}
+
+/* 児童列固定 */
+.matrixTable th:first-child,
+.matrixTable td:first-child{
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--panel);
+}
+
+.matrixTable thead th{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--panel);
+}
 .matrixTable td:last-child{
   border-right: none;
 }
