@@ -84,101 +84,94 @@
   <button class="btn" id="btnToggleSide" type="button">📊 一覧パネル</button>
 </div>
 
-    <!-- 個人ビュー -->
-    <div id="viewPersonal">
-      <!-- 12時間チェック -->
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div style="font-size:14px;font-weight:700">12時間 進捗チェック</div>
-          <span class="badge" id="stepCount">0/12</span>
-          <button class="btn" id="btnEditSteps" type="button">内容編集</button>
-        </div>
-
-        <div class="small" style="margin-top:8px">※このチェックは「個人管理」（グループ同期しない）</div>
-
-        <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px"></div>
-
-<!-- 提出物（提出：済/未）★追加 -->
-<div class="card" style="margin-top:12px">
-  <div class="row" style="justify-content:space-between;align-items:center">
-    <div style="font-size:14px;font-weight:700">提出物（提出：済/未）</div>
-    <span class="badge" id="personalAssignBadge">提出：-</span>
-  </div>
-
-  <div class="small" style="margin-top:8px">
-    ※提出物を選んで「提出：未/済」を切り替えます（児童ごとに保存）
-  </div>
-
-  <div class="sub" style="margin-top:10px">提出物を選択</div>
-  <div class="row">
-    <select id="personalAssignSelect" class="grow"></select>
-    <button class="btn" id="btnPersonalPrevAssign" type="button">←</button>
-    <button class="btn" id="btnPersonalNextAssign" type="button">→</button>
-  </div>
-
-    <div class="small" id="personalAssignStatusText" style="margin-top:10px">---</div>
-
-  <!-- ボタン行だけ -->
-  <div class="row" style="margin-top:10px">
-    <button class="btn primary" id="btnToggleSubmitted" type="button">提出：未 → 済にする</button>
-  </div>
-
-  <!-- メモ -->
-  <div class="sub" style="margin-top:12px">提出メモ（提出物ごと）</div>
-  <textarea id="personalAssignMemo" placeholder="例：再提出あり／写真OK／期限○日 など"></textarea>
-
-  <!-- 写真 -->
-  <div class="sub" style="margin-top:12px">写真（提出物ごと・最大3枚）</div>
-
-  <div class="row">
-    <input id="personalAssignPhotoInput" type="file" accept="image/*" />
-    <span class="small">※1枚ずつ追加（最大3枚）</span>
-  </div>
-
-  <div id="personalAssignPhotoGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
-
-  <div class="row" style="margin-top:8px">
-    <button class="btn" id="btnClearAssignPhotos" type="button">この提出物の写真を全部削除</button>
-  </div>
-  </div>
-</div>
-        
-        <!-- ラベル編集パネル -->
-        <div class="card" id="stepEditor" style="display:none; margin-top:12px">
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <div style="font-size:14px;font-weight:700">12時間の内容編集</div>
-            <button class="btn" id="btnCloseStepEditor" type="button">閉じる</button>
-          </div>
-
-          <div class="sub" style="margin-top:10px">適用先</div>
-          <select id="stepApplyScope">
-            <option value="current">この児童だけ</option>
-            <option value="group">同じグループ</option>
-            <option value="all">全員</option>
-            <option value="selected">選択した児童だけ</option>
-          </select>
-
-          <div id="selectedStudentsBox" style="display:none; margin-top:10px">
-            <div class="sub">適用する児童を選択</div>
-            <div id="selectedStudentsList" style="display:grid; gap:8px; margin-top:8px"></div>
-          </div>
-
-          <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
-            <button class="btn" id="btnLoadGlobalLabels" type="button">共通テンプレを読み込み</button>
-            <button class="btn" id="btnSaveGlobalLabels" type="button">共通テンプレとして保存</button>
-            <button class="btn primary" id="btnSaveStepLabels" type="button">保存して適用</button>
-          </div>
-
-          <div class="sub" style="margin-top:12px">12個の内容</div>
-          <div id="stepLabelInputs" style="display:grid; gap:8px; margin-top:8px"></div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
-        </div>
-      </div>
+   <!-- 個人ビュー -->
+<div id="viewPersonal">
+  <!-- 12時間チェック -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:700">12時間 進捗チェック</div>
+      <span class="badge" id="stepCount">0/12</span>
+      <button class="btn" id="btnEditSteps" type="button">内容編集</button>
     </div>
 
+    <div class="small" style="margin-top:8px">※このチェックは「個人管理」（グループ同期しない）</div>
+    <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px"></div>
+
+    <!-- 提出物（提出：済/未） -->
+    <div class="card" style="margin-top:12px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:14px;font-weight:700">提出物（提出：済/未）</div>
+        <span class="badge" id="personalAssignBadge">提出：-</span>
+      </div>
+
+      <div class="small" style="margin-top:8px">
+        ※提出物を選んで「提出：未/済」を切り替えます（児童ごとに保存）
+      </div>
+
+      <div class="sub" style="margin-top:10px">提出物を選択</div>
+      <div class="row">
+        <select id="personalAssignSelect" class="grow"></select>
+        <button class="btn" id="btnPersonalPrevAssign" type="button">←</button>
+        <button class="btn" id="btnPersonalNextAssign" type="button">→</button>
+      </div>
+
+      <div class="small" id="personalAssignStatusText" style="margin-top:10px">---</div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="btnToggleSubmitted" type="button">提出：未 → 済にする</button>
+      </div>
+
+      <div class="sub" style="margin-top:12px">提出メモ（提出物ごと）</div>
+      <textarea id="personalAssignMemo" placeholder="例：再提出あり／写真OK／期限○日 など"></textarea>
+
+      <div class="sub" style="margin-top:12px">写真（提出物ごと・最大3枚）</div>
+      <div class="row">
+        <input id="personalAssignPhotoInput" type="file" accept="image/*" />
+        <span class="small">※1枚ずつ追加（最大3枚）</span>
+      </div>
+
+      <div id="personalAssignPhotoGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
+
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="btnClearAssignPhotos" type="button">この提出物の写真を全部削除</button>
+      </div>
+    </div><!-- /提出物 card -->
+
+    <!-- ラベル編集パネル -->
+    <div class="card" id="stepEditor" style="display:none; margin-top:12px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-size:14px;font-weight:700">12時間の内容編集</div>
+        <button class="btn" id="btnCloseStepEditor" type="button">閉じる</button>
+      </div>
+
+      <div class="sub" style="margin-top:10px">適用先</div>
+      <select id="stepApplyScope">
+        <option value="current">この児童だけ</option>
+        <option value="group">同じグループ</option>
+        <option value="all">全員</option>
+        <option value="selected">選択した児童だけ</option>
+      </select>
+
+      <div id="selectedStudentsBox" style="display:none; margin-top:10px">
+        <div class="sub">適用する児童を選択</div>
+        <div id="selectedStudentsList" style="display:grid; gap:8px; margin-top:8px"></div>
+      </div>
+
+      <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap">
+        <button class="btn" id="btnLoadGlobalLabels" type="button">共通テンプレを読み込み</button>
+        <button class="btn" id="btnSaveGlobalLabels" type="button">共通テンプレとして保存</button>
+        <button class="btn primary" id="btnSaveStepLabels" type="button">保存して適用</button>
+      </div>
+
+      <div class="sub" style="margin-top:12px">12個の内容</div>
+      <div id="stepLabelInputs" style="display:grid; gap:8px; margin-top:8px"></div>
+    </div><!-- /stepEditor -->
+
+    <div class="row" style="margin-top:10px">
+      <button class="btn danger" id="btnClearSteps" type="button">この児童のチェックを全部外す</button>
+    </div>
+  </div><!-- /12時間 card -->
+</div><!-- /viewPersonal -->
         <!-- 一覧ビュー -->
     <div id="viewOverview" style="display:none">
 
