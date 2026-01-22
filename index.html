@@ -79,44 +79,19 @@
     <div id="stepsWrap" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:10px"></div>
 
     <!-- 提出物（提出：済/未） -->
-    <div class="card" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div style="font-size:14px;font-weight:700">提出物（提出：済/未）</div>
-        <span class="badge" id="personalAssignBadge">提出：-</span>
-      </div>
+<div class="card" style="margin-top:12px">
+  <div class="row" style="justify-content:space-between;align-items:center">
+    <div style="font-size:14px;font-weight:700">提出物（一覧）</div>
+    <span class="badge" id="personalAssignRateBadge">提出率 -/-（-%）</span>
+  </div>
 
-      <div class="small" style="margin-top:8px">
-        ※提出物を選んで「提出：未/済」を切り替えます（児童ごとに保存）
-      </div>
+  <div class="small" style="margin-top:8px">
+    ※各提出物ごとに「提出：未/済」「メモ」「写真（最大3枚）」を記録できます
+  </div>
 
-      <div class="sub" style="margin-top:10px">提出物を選択</div>
-      <div class="row">
-        <select id="personalAssignSelect" class="grow"></select>
-        <button class="btn" id="btnPersonalPrevAssign" type="button">←</button>
-        <button class="btn" id="btnPersonalNextAssign" type="button">→</button>
-      </div>
-
-      <div class="small" id="personalAssignStatusText" style="margin-top:10px">---</div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" id="btnToggleSubmitted" type="button">提出：未 → 済にする</button>
-      </div>
-
-      <div class="sub" style="margin-top:12px">提出メモ（提出物ごと）</div>
-      <textarea id="personalAssignMemo" placeholder="例：再提出あり／写真OK／期限○日 など"></textarea>
-
-      <div class="sub" style="margin-top:12px">写真（提出物ごと・最大3枚）</div>
-      <div class="row">
-        <input id="personalAssignPhotoInput" type="file" accept="image/*" />
-        <span class="small">※1枚ずつ追加（最大3枚）</span>
-      </div>
-
-      <div id="personalAssignPhotoGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
-
-      <div class="row" style="margin-top:8px">
-        <button class="btn" id="btnClearAssignPhotos" type="button">この提出物の写真を全部削除</button>
-      </div>
-    </div><!-- /提出物 card -->
+  <!-- ★ここに提出物カードをJSで全部描画する -->
+  <div id="personalAssignmentsWrap" style="display:grid; gap:10px; margin-top:10px"></div>
+</div><!-- /提出物 card -->
 
     <!-- ラベル編集パネル -->
     <div class="card" id="stepEditor" style="display:none; margin-top:12px">
