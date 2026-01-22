@@ -150,3 +150,91 @@ textarea{min-height:84px; resize:vertical}
 #btnToggleSide{
   margin-left: auto;
 }
+
+/* ===== 一覧：マトリクス表 ===== */
+.matrixWrap{
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+}
+
+.matrixTable{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:720px; /* 横が狭いときはスクロール */
+}
+
+.matrixTable th,
+.matrixTable td{
+  border-bottom:1px solid var(--line);
+  border-right:1px solid var(--line);
+  padding:8px 10px;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.matrixTable th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:var(--card);
+  font-weight:800;
+}
+
+.matrixTable th:first-child{
+  left:0;
+  z-index:3;
+}
+
+.matrixTable td:first-child{
+  position:sticky;
+  left:0;
+  z-index:1;
+  background:var(--card);
+  font-weight:800;
+}
+
+.matrixTable tr:last-child td{
+  border-bottom:none;
+}
+
+.matrixTable th:last-child,
+.matrixTable td:last-child{
+  border-right:none;
+}
+
+/* セル（12時間） */
+.cellStep{
+  text-align:center;
+  cursor:pointer;
+  border-radius:8px;
+  user-select:none;
+  font-weight:800;
+}
+.cellStep.isDone{
+  background:rgba(0, 200, 120, 0.18);
+}
+.cellStep.isTodo{
+  background:rgba(255,255,255,0.03);
+}
+
+/* セル（提出物） */
+.cellAssign{
+  text-align:center;
+  cursor:pointer;
+  border-radius:8px;
+  user-select:none;
+  font-weight:900;
+}
+.cellAssign.isSubmitted{
+  background:rgba(0, 200, 120, 0.18);
+}
+.cellAssign.isMissing{
+  /* 未提出は強調（赤） */
+  background:rgba(255, 60, 60, 0.22);
+  outline:2px solid rgba(255, 60, 60, 0.35);
+}
+
+
