@@ -20,6 +20,9 @@
 
       <div class="headerActions">
         <button class="btn" id="btnTheme" type="button">🌙</button>
+        <button class="btn" id="btnOpenRoster" type="button">名簿設定</button>
+        <button class="btn" id="btnOpenAssign" type="button">提出物設定</button>
+        <button class="btn" id="btnBackMain" type="button" style="display:none">←戻る</button>
         <button class="btn" id="btnExport" type="button">エクスポート</button>
         <button class="btn" id="btnImport" type="button">インポート</button>
         <button class="btn danger" id="btnReset" type="button">全データ削除</button>
@@ -28,6 +31,7 @@
   </div>
 </header>
 
+<div id="screenMain">
 <div class="wrap grid">
   <!-- 左：名簿 -->
   <div class="card">
@@ -71,7 +75,7 @@
       <h2>記録</h2>
       <span class="hint">提出物・画像は個人（同期しない）</span>
     </div>
-
+  </div>
     <!-- 画面切替 -->
     <div class="row" style="margin-bottom:10px">
   <button class="btn primary" id="btnViewPersonal" type="button">個人</button>
@@ -281,6 +285,44 @@
 
 <!-- ★追加：背景オーバーレイ -->
 <div id="drawerOverlay" class="drawerOverlay" aria-hidden="true"></div>
+
+<!-- ===================================================
+     ★追加：名簿設定 画面
+=================================================== -->
+<div id="screenRoster" style="display:none">
+  <header>
+    <div class="wrap">
+      <div class="card">
+        <div class="sec-title">
+          <h2>名簿設定</h2>
+          <span class="hint">追加・削除・グループ割り当て</span>
+        </div>
+        <div id="rosterScreenBody" class="small">
+          （ここに名簿設定のUIを移動・追加していきます）
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<!-- ===================================================
+     ★追加：提出物設定 画面
+=================================================== -->
+<div id="screenAssignments" style="display:none">
+  <header>
+    <div class="wrap">
+      <div class="card">
+        <div class="sec-title">
+          <h2>提出物設定</h2>
+          <span class="hint">提出物の追加・編集・削除</span>
+        </div>
+        <div id="assignScreenBody" class="small">
+          （ここに提出物設定のUIを移動・追加していきます）
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
   
 <script src="./app.js" defer></script>
 </body>
