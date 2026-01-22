@@ -1149,17 +1149,29 @@ function renderOverviewAssignments(){
       td.textContent = submitted ? "提出済" : "未提出";
       td.style.cursor = "pointer";
 
-      // クリックでその児童に切替＋その提出物を個人で選択
-      td.onclick = ()=>{
-        state.currentStudent = stName;
-        state.currentAssignId = a.id;   // ←ここが重要
-        saveData();
+      // ★セルタップで「提出/未提出」を切替（一覧内で完結）
+td.onclick = (ev)=>{
+  ev.preventDefault();
 
-        renderStudentSelect();
-        renderGroupUI();
-        renderSteps();
-        setView("personal");
-      };
+  ensureStudent(stName);
+
+  // 現在値を反転
+  const obj = state.data.assignStatusByStudent[stName][a.id];
+  obj.submitted = !obj.submitted;
+
+  saveData();
+
+  // 一覧を再描画（表示と提出率バッジも更新される）
+  renderOverviewAssignments();
+
+  // サイドドロワーが開いてたら反映
+  renderSideOverview();
+
+  // もし今選択中の児童・提出物なら、個人側も同期（存在する関数だけ）
+  if(state.currentStudent === stName && state.currentAssignId === a.id){
+    if(typeof renderPersonalAssignments === "function") renderPersonalAssignments();
+  }
+};
 
       tr.appendChild(td);
     });
