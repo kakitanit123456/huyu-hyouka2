@@ -33,41 +33,22 @@
 
 <div id="screenMain">
 <div class="wrap grid">
-  <!-- 左：名簿 -->
-  <div class="card">
-    <div class="sec-title">
-      <h2>名簿</h2>
-      <span class="hint">児童の追加／削除</span>
-    </div>
-
-    <div class="row">
-      <select id="studentSelect" class="grow"></select>
-      <button class="btn" id="btnDeleteStudent" type="button">削除</button>
-    </div>
-
-    <div class="row">
-      <input id="newStudentName" class="grow" placeholder="追加する児童名（例：山田 太郎）" />
-      <button class="btn primary" id="btnAddStudent" type="button">追加</button>
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="sec-title">
-      <h2>グループ設定（2・2・3）</h2>
-      <span class="hint">G1/G2/G3＋未設定</span>
-    </div>
-
-    <div class="row">
-      <select id="groupSelect" class="grow">
-        <option value="">（未設定）</option>
-        <option value="G1">G1（2人）</option>
-        <option value="G2">G2（2人）</option>
-        <option value="G3">G3（3人）</option>
-      </select>
-      <button class="btn" id="btnAutoGroup" type="button">自動(2・2・3)</button>
-    </div>
-    <div class="small" id="groupCount" style="margin-top:6px">人数：G1=0 / G2=0 / G3=0（未=0）</div>
+  
+  <!-- ★左：児童選択（ミニ） -->
+<div class="card">
+  <div class="sec-title">
+    <h2>児童</h2>
+    <span class="hint">記録する児童を切替</span>
   </div>
+
+  <div class="row">
+    <select id="studentSelect" class="grow"></select>
+  </div>
+
+  <div class="small" style="margin-top:8px">
+    ※名簿の追加・削除・グループ設定は「名簿設定」から行います
+  </div>
+</div>
 
   <!-- 右：入力 -->
   <div class="card soft">
@@ -289,7 +270,46 @@
           <span class="hint">追加・削除・グループ割り当て</span>
         </div>
         <div id="rosterScreenBody" class="small">
-          （ここに名簿設定のUIを移動・追加していきます）
+          <div id="rosterScreenBody">
+  <div class="card">
+    <div class="sec-title">
+      <h2>名簿</h2>
+      <span class="hint">児童の追加／削除</span>
+    </div>
+
+    <div class="row">
+      <!-- roster側は別IDにする（mainと重複防止） -->
+      <select id="rosterStudentSelect" class="grow"></select>
+      <button class="btn" id="btnDeleteStudent" type="button">削除</button>
+    </div>
+
+    <div class="row">
+      <input id="newStudentName" class="grow" placeholder="追加する児童名（例：山田 太郎）" />
+      <button class="btn primary" id="btnAddStudent" type="button">追加</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="sec-title">
+      <h2>グループ設定（2・2・3）</h2>
+      <span class="hint">G1/G2/G3＋未設定</span>
+    </div>
+
+    <div class="row">
+      <select id="groupSelect" class="grow">
+        <option value="">（未設定）</option>
+        <option value="G1">G1（2人）</option>
+        <option value="G2">G2（2人）</option>
+        <option value="G3">G3（3人）</option>
+      </select>
+      <button class="btn" id="btnAutoGroup" type="button">自動(2・2・3)</button>
+    </div>
+
+    <div class="small" id="groupCount" style="margin-top:6px">
+      人数：G1=0 / G2=0 / G3=0（未=0）
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </div>
