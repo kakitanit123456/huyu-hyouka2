@@ -1400,7 +1400,7 @@ function normalizePersonalAssignId(){
 }
 
 function renderPersonalPhotos(stName, assignId){
-  const host = document.getElementById("personalPhotoArea");
+  const host = document.getElementById("personalPhotoRow");
   if(!host) return;
 
   ensureStudent(stName);
@@ -1480,9 +1480,9 @@ function renderPersonalPhotos(stName, assignId){
 
 function renderPersonalAssignments(){
   const sel = $("personalAssignSelect", "personalAssignmentSelect", "personalAssign"); // ←代替候補
-  const badge = $("personalAssignBadge", "personalAssignmentBadge");
+  const badge = document.getElementById("personalAssignTitleBadge");
   const memo = $("personalAssignMemo", "personalAssignmentMemo");
-  const btnToggle = $("btnToggleSubmitted", "btnToggleSubmit", "btnPersonalToggleSubmitted");
+ const btnToggle = document.getElementById("btnPersonalToggleSubmitted");
 
   if(!sel || !badge || !memo || !btnToggle){
     console.warn("personal assignment UI missing:", {
@@ -1500,7 +1500,7 @@ function renderPersonalAssignments(){
     memo.value = "";
     btnToggle.textContent = "提出：未";
     btnToggle.classList.remove("primary");
-    const host = document.getElementById("personalPhotoArea");
+    const host = document.getElementById("personalPhotoRow");
     if(host) host.innerHTML = "";
     return;
   }
@@ -1534,7 +1534,7 @@ function bindPersonalAssignments(){
   const memo = document.getElementById("personalAssignMemo");
   const prevBtn = document.getElementById("btnPersonalPrevAssign");
   const nextBtn = document.getElementById("btnPersonalNextAssign");
-  const btnToggle = document.getElementById("btnToggleSubmitted");
+  const btnToggle = document.getElementById("btnPersonalToggleSubmitted");
 
   if(!sel || !memo || !btnToggle) return;
 
