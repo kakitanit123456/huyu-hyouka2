@@ -964,7 +964,7 @@ function renderOverviewSteps(){
   wrap.className = "matrixWrap";
 
   const table = document.createElement("table");
-  table.className = "matrixTable";
+  table.className = "matrixTable matrixTableSteps";
 
   // ヘッダ
   const thead = document.createElement("thead");
@@ -1095,6 +1095,7 @@ function renderOverviewAssignments(){
   outer.className = "matrixWrap";
 
   const t = document.createElement("table");
+  t.className = "matrixTable matrixTableAssign";table");
   t.className = "matrixTable";
 
   // ヘッダ
