@@ -1202,53 +1202,81 @@ function renderOverviewSteps(){
   const host = document.getElementById("overviewTable");
   if(!host) return;
 
+  const labels = getStepLabelsFor(state.currentStudent || state.data.students[0]);
+
   const wrap = document.createElement("div");
-  wrap.style.display = "grid";
-  wrap.style.gap = "8px";
+  wrap.className = "matrixWrap";
+
+  const table = document.createElement("table");
+  table.className = "matrixTable";
+
+  // ヘッダ
+  const thead = document.createElement("thead");
+  const trh = document.createElement("tr");
+
+  const th0 = document.createElement("th");
+  th0.textContent = "児童";
+  trh.appendChild(th0);
+
+  for(let i=0;i<12;i++){
+    const th = document.createElement("th");
+    th.textContent = String(i+1);
+    th.title = labels[i] || "";
+    trh.appendChild(th);
+  }
+  thead.appendChild(trh);
+  table.appendChild(thead);
+
+  // 本体
+  const tbody = document.createElement("tbody");
 
   state.data.students.forEach(name=>{
     ensureStudent(name);
-
     const arr = state.data.stepsByStudent[name] || [];
-    const done = arr.filter(Boolean).length;
+    const tr = document.createElement("tr");
 
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "btn";
-    row.style.textAlign = "left";
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "1fr auto";
-    row.style.alignItems = "center";
-    row.style.gap = "10px";
-    row.style.padding = "12px";
+    // 児童名（クリックで切替）
+    const tdName = document.createElement("td");
+    tdName.textContent = name;
+    tdName.style.cursor = "pointer";
+    tdName.title = "クリックでこの児童に切替";
+    tdName.onclick = ()=>{
+      state.currentStudent = name;
+      saveData();
+      renderStudentSelect();
+      renderGroupUI();
+      renderSteps();
+      renderPersonalAssignments();
+      setView("personal");
+    };
+    tr.appendChild(tdName);
 
-    const left = document.createElement("div");
-    left.innerHTML = `
-      <div style="font-weight:800">${name}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">${done}/12 完了</div>
-    `;
+    // 12セル
+    for(let i=0;i<12;i++){
+      const td = document.createElement("td");
+      td.className = "cellStep " + (arr[i] ? "isDone" : "isTodo");
+      td.textContent = arr[i] ? "✓" : "";
+      td.title = labels[i] || "";
 
-    const right = document.createElement("div");
-    right.className = "badge";
-    right.textContent = `${done}/12`;
+      // セルクリックでも児童へ切替（見やすさ優先）
+      td.onclick = ()=>{
+        state.currentStudent = name;
+        saveData();
+        renderStudentSelect();
+        renderGroupUI();
+        renderSteps();
+        renderPersonalAssignments();
+        setView("personal");
+      };
 
-    // 行クリック → その児童へ切替して「個人」に戻る
-    row.onclick = ()=>{
-  state.currentStudent = name;
-  saveData();
+      tr.appendChild(td);
+    }
 
-  renderStudentSelect();
-  renderGroupUI();
-  renderSteps();
-  renderPersonalAssignments(); // ★追加
-
-  setView("personal");
-};
-
-    row.appendChild(left);
-    row.appendChild(right);
-    wrap.appendChild(row);
+    tbody.appendChild(tr);
   });
+
+  table.appendChild(tbody);
+  wrap.appendChild(table);
 
   host.innerHTML = "";
   host.appendChild(wrap);
@@ -1354,59 +1382,67 @@ function renderOverviewAssignments(){
   const rate = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
   badge.textContent = `提出率 ${submittedCount}/${total}（${rate}%）`;
 
-  // 表（児童ごとの提出状況）
-  const wrap = document.createElement("div");
-  wrap.style.display = "grid";
-  wrap.style.gap = "8px";
+  // 表（児童ごとの提出状況）→ 表形式（未提出を赤で強調）
+const outer = document.createElement("div");
+outer.className = "matrixWrap";
 
-  state.data.students.forEach(name=>{
-    ensureStudent(name);
+const t = document.createElement("table");
+t.className = "matrixTable";
 
-    const st = state.data.assignStatusByStudent?.[name]?.[assignId];
-    const submitted = !!(st && st.submitted);
+// ヘッダ
+const thead = document.createElement("thead");
+const trh = document.createElement("tr");
 
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "btn";
-    row.style.textAlign = "left";
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "1fr auto";
-    row.style.alignItems = "center";
-    row.style.gap = "10px";
-    row.style.padding = "12px";
+const thName = document.createElement("th");
+thName.textContent = "児童";
+trh.appendChild(thName);
 
-    const left = document.createElement("div");
-    left.innerHTML = `
-      <div style="font-weight:800">${name}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">
-        ${submitted ? "提出：済" : "提出：未"}
-      </div>
-    `;
+const thAssign = document.createElement("th");
+thAssign.textContent = getAssignTitle(assignId);
+trh.appendChild(thAssign);
 
-    const right = document.createElement("div");
-    right.className = "badge";
-    right.textContent = submitted ? "✅" : "—";
+thead.appendChild(trh);
+t.appendChild(thead);
 
-    // 行クリック → その児童へ切替して「個人」に戻る
-    row.onclick = ()=>{
-  state.currentStudent = name;
-  saveData();
+// 本体
+const tbody = document.createElement("tbody");
 
-  renderStudentSelect();
-  renderGroupUI();
-  renderSteps();
-  renderPersonalAssignments(); // ★追加
+state.data.students.forEach(name=>{
+  ensureStudent(name);
+  const st = state.data.assignStatusByStudent?.[name]?.[assignId];
+  const submitted = !!(st && st.submitted);
 
-  setView("personal");
-};
+  const tr = document.createElement("tr");
 
-    row.appendChild(left);
-    row.appendChild(right);
-    wrap.appendChild(row);
-  });
+  const tdName = document.createElement("td");
+  tdName.textContent = name;
+  tdName.style.cursor = "pointer";
+  tdName.onclick = ()=>{
+    state.currentStudent = name;
+    saveData();
+    renderStudentSelect();
+    renderGroupUI();
+    renderSteps();
+    renderPersonalAssignments();
+    setView("personal");
+  };
+  tr.appendChild(tdName);
 
-  table.innerHTML = "";
-  table.appendChild(wrap);
+  const tdStatus = document.createElement("td");
+  tdStatus.className = "cellAssign " + (submitted ? "isSubmitted" : "isMissing");
+  tdStatus.textContent = submitted ? "提出済" : "未提出";
+  tdStatus.style.cursor = "pointer";
+  tdStatus.onclick = ()=> tdName.onclick();
+  tr.appendChild(tdStatus);
+
+  tbody.appendChild(tr);
+});
+
+t.appendChild(tbody);
+outer.appendChild(t);
+
+table.innerHTML = "";
+table.appendChild(outer);
   renderAssignManager(); // ★追加：提出物の編集/削除一覧を描画
 }
 
