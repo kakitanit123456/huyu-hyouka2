@@ -36,7 +36,6 @@ function toggleTheme(){
 
 /* =========================
    3) Default data（初期データ）
-   - ここを増やすと「データ構造の仕様」が増える
 ========================= */
 const defaultData = {
   // 名簿
@@ -75,7 +74,13 @@ const defaultData = {
 
   // 提出状況： studentName -> { assignmentId -> { submitted:boolean } }
   // 例: assignStatusByStudent["（サンプル）児童A"]["a1"].submitted = true
-  assignStatusByStudent: {}
+  assignStatusByStudent: {},
+   // ★写真の最大枚数（要素ごとに設定：0〜3）
+  photoLimits: {
+    observation: 1,   // 観察カード
+    test: 1,          // テスト
+    performance: 2    // パフォーマンス課題
+  }
 };
 
 
@@ -207,6 +212,10 @@ function loadData(){
     if(!d.assignStatusByStudent || typeof d.assignStatusByStudent !== "object"){
       d.assignStatusByStudent = {};
     }
+     // --- ★写真枚数制限（photoLimits）補完 ---
+   if(!d.photoLimits || typeof d.photoLimits !== "object"){
+     d.photoLimits = safeClone(defaultData.photoLimits);
+}
 
     // --- 児童ごとの不足を補完 ---
     d.students.forEach(name=>{
@@ -330,10 +339,19 @@ function getGroupMembers(studentName){
   return state.data.students.filter(n => ((state.data.studentGroup && state.data.studentGroup[n]) || "") === g);
 }
 
+// ★写真枚数の上限を取得（0〜3）
+function getPhotoLimit(elementKey){
+  const limits = state.data.photoLimits || {};
+  const n = limits[elementKey];
+
+  if(typeof n !== "number") return 3;
+  if(n < 0) return 0;
+  if(n > 3) return 3;
+  return n;
+}
+
 /* =========================
    Assignments helpers（提出物マスタ）
-   ※ Step Aでは「一覧で提出率計算」まで使う
-   ※ 追加/編集/削除のUIは次ステップで入れる
 ========================= */
 function getAssignments(){
   if(!Array.isArray(state.data.assignments)) state.data.assignments = [];
