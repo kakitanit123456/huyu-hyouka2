@@ -42,6 +42,7 @@ header{
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .grid{display:grid;gap:12px}
 @media (min-width: 920px){ .grid{grid-template-columns: 360px 1fr} }
+.grid > *{ min-width: 0; }
 
 .grow{flex:1; min-width:0}
 h1{font-size:16px;margin:0 0 6px 0;letter-spacing:.02em}
@@ -257,15 +258,4 @@ body{
 }
 .matrixTable tbody tr:last-child td{
   border-bottom: none;
-}
-/* ★ページが横に広がらないようにする（表は中だけスクロール） */
-.matrixWrap{
-  width: 100%;
-  max-width: 100%;
-  display: block;
-}
-
-/* ついでに保険：画面全体の横スクロールを消す */
-body{
-  overflow-x: hidden;
 }
