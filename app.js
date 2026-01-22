@@ -1291,24 +1291,8 @@ function renderOverviewSteps(){
      btnOverviewNextAssign
      overviewAssignTable
 ==================================================== */
-function initOverviewAssignments(){
-  const sel = document.getElementById("overviewAssignSelect");
-  if(!sel) return;
-
-  const list = getAssignments();
-  if(list.length === 0){
-    state.currentAssignId = null;
-    return;
-  }
-
-  // まだ選択がなければ先頭
-  if(!state.currentAssignId || !list.some(a => a.id === state.currentAssignId)){
-    state.currentAssignId = list[0].id;
-  }
-}
 
 function renderOverviewAssignments(){
-  const sel = document.getElementById("overviewAssignSelect");
   const badge = document.getElementById("overviewAssignRateBadge");
   const table = document.getElementById("overviewAssignTable");
   if(!sel || !badge || !table) return;
@@ -1316,29 +1300,12 @@ function renderOverviewAssignments(){
   initOverviewAssignments();
 
   const assigns = getAssignments();
-  sel.innerHTML = "";
-
-  assigns.forEach(a=>{
-    const o = document.createElement("option");
-    o.value = a.id;
-    o.textContent = a.title;
-    sel.appendChild(o);
-  });
-
+  
   if(state.currentAssignId){
     sel.value = state.currentAssignId;
   }
 
-  // 選択が変わったら再描画
-  sel.onchange = ()=>{
-    state.currentAssignId = sel.value;
-    saveData();
-    renderOverviewAssignments();
-  };
-
-  // ← → ボタン
-  const prevBtn = document.getElementById("btnOverviewPrevAssign");
-  const nextBtn = document.getElementById("btnOverviewNextAssign");
+  //←・→ボタン
 
   if(prevBtn){
     prevBtn.onclick = ()=>{
@@ -1360,14 +1327,6 @@ function renderOverviewAssignments(){
       saveData();
       renderOverviewAssignments();
     };
-  }
-
-  // 提出率計算
-  const assignId = state.currentAssignId;
-  if(!assignId){
-    badge.textContent = "提出率 -/-（-%）";
-    table.innerHTML = `<div class="small">提出物がありません。</div>`;
-    return;
   }
 
   let submittedCount = 0;
