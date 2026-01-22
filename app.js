@@ -1095,7 +1095,6 @@ function renderOverviewAssignments(){
   outer.className = "matrixWrap";
 
   const t = document.createElement("table");
-  t.className = "matrixTable matrixTableAssign";table");
   t.className = "matrixTable matrixTableAssign";
 
   // ヘッダ
