@@ -214,8 +214,7 @@ body{
 
   width: max-content;   /* 列が増えたら横に伸びる */
   min-width: 100%;      /* 少ないときは枠いっぱい */
-
-  table-layout: fixed;  /* ★追加：列幅計算を安定させる（stickyが効きやすい） */
+  table-layout: auto; /* ←ここをautoに */
 }
 
 /* ★手順3：列幅の基準を作る（左列固定が見やすくなる） */
