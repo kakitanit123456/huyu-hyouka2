@@ -78,6 +78,83 @@ const defaultData = {
   assignStatusByStudent: {}
 };
 
+function bindAssignmentButtons(){
+  const addBtn = document.getElementById("btnAddAssign");
+  const input  = document.getElementById("newAssignTitle");
+  const listEl = document.getElementById("assignManagerList");
+
+  if(!addBtn || !input) return;
+
+  addBtn.onclick = ()=>{
+    const title = (input.value || "").trim();
+    if(!title) return alert("提出物名を入力してください。");
+
+    // 新しいIDを作る
+    const id = "a" + Date.now().toString(36);
+
+    state.data.assignments.push({ id, title });
+
+    // 既存児童全員に提出状況を補完
+    state.data.students.forEach(name=>{
+      ensureStudent(name);
+      state.data.assignStatusByStudent[name][id] = {
+        submitted:false,
+        memo:"",
+        photos:["","",""]
+      };
+    });
+
+    input.value = "";
+    saveData();
+
+    // 再描画
+    renderPersonalAssignments();
+    renderOverviewAssignments();
+    renderSideOverview(true);
+    renderAssignmentManager();
+  };
+}
+
+function renderAssignmentManager(){
+  const list = document.getElementById("assignManagerList");
+  if(!list) return;
+
+  list.innerHTML = "";
+
+  getAssignments().forEach(a=>{
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const span = document.createElement("span");
+    span.textContent = a.title;
+
+    const del = document.createElement("button");
+    del.className = "btn danger";
+    del.textContent = "削除";
+    del.onclick = ()=>{
+      if(!confirm(`「${a.title}」を削除しますか？`)) return;
+
+      state.data.assignments =
+        state.data.assignments.filter(x => x.id !== a.id);
+
+      // 提出状況も削除
+      state.data.students.forEach(name=>{
+        delete state.data.assignStatusByStudent[name][a.id];
+      });
+
+      saveData();
+      renderAssignmentManager();
+      renderPersonalAssignments();
+      renderOverviewAssignments();
+      renderSideOverview(true);
+    };
+
+    row.appendChild(span);
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
 /* =========================
    4) util
 ========================= */
