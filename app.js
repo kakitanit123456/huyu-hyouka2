@@ -633,7 +633,7 @@ function bindSideDrawer(){
 ==================================================== */
 
 function renderStudentSelect(){
-  const selMain   = document.getElementById("studentSelect");        // main用
+  const selMain   = document.getElementById("mainStudentSelect") || document.getElementById("studentSelect");        // main用
   const selRoster = document.getElementById("rosterStudentSelect");  // roster用
 
   const sels = [selMain, selRoster].filter(Boolean);
